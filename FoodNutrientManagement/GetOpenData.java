@@ -10,7 +10,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.HashMap;
 
 public class GetOpenData {
     public static FoodNutrient getData(String foodName) throws IOException, ParseException {
@@ -49,7 +48,7 @@ public class GetOpenData {
         JSONArray items = (JSONArray) body.get("items");
         JSONObject item = (JSONObject) items.get(0);
 
-        FoodNutrient foodNtrInfo = new FoodNutrient();
+        FoodNutrient foodNtrInfo = new FoodNutrient();  // 공공데이터용 클래스에 데이터 저장 후 리턴
         foodNtrInfo.setName((String) item.get("DESC_KOR"));
         foodNtrInfo.setCalories((Double) item.get("NUTR_CONT1"));
         foodNtrInfo.setCarbohydrate((Double) item.get("NUTR_CONT2"));

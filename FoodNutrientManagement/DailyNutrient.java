@@ -1,12 +1,12 @@
 package FoodNutrientManagement;
 
-public class DailyNutrient {
-    private String date;
-    private int time;
-    private double calories;
-    private double carbohydrate;
-    private double protein;
-    private double fat;
+public class DailyNutrient {        // DB 일일_영양소 테이블 데이터를 저장하는 클래스
+    private String date;            // 날짜
+    private int time;               // 시간대
+    private double calories;        // 열량
+    private double carbohydrate;    // 탄수화물
+    private double protein;         // 단백질
+    private double fat;             // 지방
 
     public void setDate(String date) { this.date = date; }
     public void setTime(int time) { this.time = time; }

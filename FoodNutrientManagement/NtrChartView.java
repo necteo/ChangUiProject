@@ -12,13 +12,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
-public class NtrChartView extends JFrame {
+public class NtrChartView extends JFrame {  // 차트 출력 화면 클래스
 
     private final String[] times = new String[]{"아침", "점심", "저녁"};
-    private int cur = 0;
-    private final int limit = 6;
+    private int cur = 0;            // 차트에 출력중인 날짜 저장
+    private final int limit = 6;    // 한 차트에 출력 최대로 가능한 수
 
-    public NtrChartView(ArrayList<DailyNutrient> dnList) {
+    public NtrChartView(ArrayList<DailyNutrient> dnList) {  // 생성자에서 기본 화면 생성
         setTitle("일일 섭취 영양소 통계");
         setBounds(300, 300, 900, 425);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -33,7 +33,7 @@ public class NtrChartView extends JFrame {
         panel.add(btnPrev);
         btnPrev.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {    // 이전 기간 차트 출력
                 if (cur >= limit) {
                     cur -= limit;
                     placeChartPanel(panel, dnList);
@@ -49,7 +49,7 @@ public class NtrChartView extends JFrame {
         panel.add(btnNext);
         btnNext.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {    // 다음 기간 차트 출력
                 if (cur <= dnList.size() - limit) {
                     cur += limit;
                     placeChartPanel(panel, dnList);
@@ -60,12 +60,12 @@ public class NtrChartView extends JFrame {
             }
         });
 
-        placeChartPanel(panel, dnList);
+        placeChartPanel(panel, dnList);     // 차트 출력
 
         setVisible(true);
     }
 
-    public void placeChartPanel(JPanel panel, ArrayList<DailyNutrient> dnList) {
+    public void placeChartPanel(JPanel panel, ArrayList<DailyNutrient> dnList) {    // 차트 패널
         JFreeChart chart = ChartFactory.createBarChart("일일 섭취 영양소",
                 "날짜", "섭취량", createDataset(dnList));
         chart.getTitle().setFont(new Font("나눔바른고딕", Font.BOLD, 15));
@@ -79,7 +79,7 @@ public class NtrChartView extends JFrame {
         panel.add(chartPanel);
     }
 
-    public DefaultCategoryDataset createDataset(ArrayList<DailyNutrient> dnList) {
+    public DefaultCategoryDataset createDataset(ArrayList<DailyNutrient> dnList) {  // 차트에 출력할 데이터셋 생성
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         String series_calories = "Calories";
         String series_carbohydrate = "Carbohydrate";

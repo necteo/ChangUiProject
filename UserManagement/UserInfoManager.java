@@ -2,12 +2,12 @@ package UserManagement;
 
 import SystemManagement.DBController;
 
-public class UserInfoManager {
+public class UserInfoManager {  // DB user_info 테이블의 입출력을 담당하는 클래스
     DBController db = new DBController();
 
-    public boolean setInfo(String name, String pwd, int year, int sex) {
-        if (isDuplicate(pwd))
-            return false;
+    public boolean setInfo(String name, String pwd, int year, int sex) {    // 사용자 정보를 DB 에 저장
+        if (isDuplicate(pwd))   // 중복 확인
+            return false;       // 중복일 시 false 리턴 후 함수 종료
         try {
             db.dbConn();
             String sql = "insert into user_info values (?, ?, ?, ?)";
@@ -24,7 +24,7 @@ public class UserInfoManager {
         return true;
     }
 
-    public String getInfo(String n, String p) { // name, password
+    public String getInfo(String n, String p) { // name, password 데이터를 읽어옴
         String name = "";
         String pwd = "";
         try {
@@ -43,10 +43,10 @@ public class UserInfoManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return name + "," + pwd;
+        return name + "," + pwd;    // name, pwd 형태
     }
 
-    public boolean isDuplicate(String pwd) {
+    public boolean isDuplicate(String pwd) {    // 중복 확인
         boolean isDup = false;
         try {
             db.dbConn();
@@ -55,7 +55,7 @@ public class UserInfoManager {
             db.pst.setString(1, pwd);
             db.rs = db.pst.executeQuery();
             if (db.rs.next())
-                isDup = true;
+                isDup = true;   //  결과값이 있으면 중복
             db.rs.close();
             db.dbClose();
         } catch (Exception e) {

@@ -13,9 +13,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.sql.Date;
-import java.util.HashMap;
 
-public class FoodNtrView extends JFrame implements ActionListener {
+public class FoodNtrView extends JFrame implements ActionListener {     // 식품명을 저장하는 화면으로 가장 메인이 되는 화면 클래스
     private JRadioButton radBreakfast;
     private JRadioButton radLunch;
     private JRadioButton radDinner;
@@ -23,8 +22,8 @@ public class FoodNtrView extends JFrame implements ActionListener {
 
     public static void main(String[] args) {
         new FoodNtrView();
-    }
-    public FoodNtrView() {
+    }   // 로그인 건너뛰고 테스트용
+    public FoodNtrView() {      // 생성자에서 기본 화면 생성
         setTitle("식품 영양소 관리");
         setBounds(500, 300, 450, 430);
         setResizable(false);
@@ -49,7 +48,7 @@ public class FoodNtrView extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    public void placeFoodNtrPanel(JPanel panel) {
+    public void placeFoodNtrPanel(JPanel panel) {   // 식품명을 입력받는 패널
         panel.setBounds(0, 0, 450, 300);
         getContentPane().add(panel);
         panel.setLayout(null);
@@ -89,14 +88,14 @@ public class FoodNtrView extends JFrame implements ActionListener {
         btnInput.setBounds(290, 35, 120, 60);
         btnInput.addActionListener(this);
         panel.add(btnInput);
-        btnInput.addActionListener(new ActionListener() {
+        btnInput.addActionListener(new ActionListener() {   // 버튼이 눌리면
             @Override
             public void actionPerformed(ActionEvent e) {
                 NtrDataManager ndm = new NtrDataManager();
 
                 try {
-                    FoodNutrient foodNtrInfo = GetOpenData.getData(txtFood.getText());
-                    DailyNutrient dn = new DailyNutrient();
+                    FoodNutrient foodNtrInfo = GetOpenData.getData(txtFood.getText());  // 입력된 식품명으로 공공데이터 가져옴
+                    DailyNutrient dn = new DailyNutrient();     // DB 일일_영양소 테이블 저장용 클래스
                     dn.setDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                     dn.setTime(time);
                     dn.setCalories(foodNtrInfo.getCalories());
@@ -104,7 +103,7 @@ public class FoodNtrView extends JFrame implements ActionListener {
                     dn.setProtein(foodNtrInfo.getProtein());
                     dn.setFat(foodNtrInfo.getFat());
 
-                    ndm.insertData(dn);
+                    ndm.insertData(dn); // DB에 데이터 저장
                 } catch (IOException | ParseException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -112,13 +111,13 @@ public class FoodNtrView extends JFrame implements ActionListener {
         });
     }
 
-    public void placeFoodRcmPanel(JPanel panel) {
+    public void placeFoodRcmPanel(JPanel panel) {   // 식품 추천 받는 버튼이 있는 패널
         JButton btnFoodRecommend = new JButton("식품 추천");
         btnFoodRecommend.setBounds(40, 160, 350, 70);
         panel.add(btnFoodRecommend);
     }
 
-    public void placeChartPanel(JPanel panel) {
+    public void placeChartPanel(JPanel panel) {     // 차트 출력을 위한 기간을 입력받는 패널
         JLabel lblTerm = new JLabel("기간");
         lblTerm.setBounds(15, 295, 40, 20);
         panel.add(lblTerm);
@@ -151,7 +150,7 @@ public class FoodNtrView extends JFrame implements ActionListener {
         panel.add(spnStartDay);
         spnStartDay.addChangeListener(new ChangeListener() {
             @Override
-            public void stateChanged(ChangeEvent e) {
+            public void stateChanged(ChangeEvent e) {   // 일수를 1에서 28~31로 제한하는 기능
                 int[] dayOfMonth = new int[]{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
                 int year = Integer.parseInt(spnStartYear.getValue().toString().substring(24));
                 int month = (int) spnStartMonth.getValue();
@@ -203,7 +202,7 @@ public class FoodNtrView extends JFrame implements ActionListener {
         panel.add(spnEndDay);
         spnEndDay.addChangeListener(new ChangeListener() {
             @Override
-            public void stateChanged(ChangeEvent e) {
+            public void stateChanged(ChangeEvent e) {   // 위와 똑같다
                 int[] dayOfMonth = new int[]{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
                 int year = Integer.parseInt(spnEndYear.getValue().toString().substring(24));
                 int month = (int) spnEndMonth.getValue();
@@ -236,15 +235,15 @@ public class FoodNtrView extends JFrame implements ActionListener {
                 int day = (int) spnStartDay.getValue();
                 int _year = Integer.parseInt(spnEndYear.getValue().toString().substring(24));
                 int _month = (int) spnEndMonth.getValue();
-                int _day = (int) spnEndDay.getValue();
+                int _day = (int) spnEndDay.getValue();          // 조건으로 준 기간에 따라 DB 에서 읽어온 데이터를 List 로 저장
                 ArrayList<DailyNutrient> dnList = ndm.readData(new int[]{year, month, day}, new int[]{_year, _month, _day});
-                NtrChartView fnm = new NtrChartView(dnList);
+                NtrChartView fnm = new NtrChartView(dnList);    // 차트 화면 출력
             }
         });
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {    // 아침, 점심, 저녁 선택에 따라 바꿈
         String s = e.getActionCommand();
         if (s.equals(radBreakfast.getText()))
             time = 0;

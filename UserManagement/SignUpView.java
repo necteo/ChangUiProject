@@ -4,13 +4,13 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class SignUpView extends JFrame implements ActionListener {
+public class SignUpView extends JFrame implements ActionListener {  // 회원가입 화면 클래스
 
     private JRadioButton radMale;
     private JRadioButton radFemale;
     private int sex;
 
-    public SignUpView() {
+    public SignUpView() {   // 생성자에서 기본 화면 생성
         setTitle("회원가입");
         setSize(280, 240);
         setResizable(false);
@@ -23,7 +23,7 @@ public class SignUpView extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    public void placeSignUpView(JPanel panel) {
+    public void placeSignUpView(JPanel panel) { // 패널 구성
         panel.setLayout(null);
         JLabel lblName = new JLabel("*이름");
         lblName.setBounds(10, 10, 80, 25);
@@ -77,18 +77,18 @@ public class SignUpView extends JFrame implements ActionListener {
                 int year = Integer.parseInt(txtYear.getText());
 
                 UserInfoManager uim = new UserInfoManager();
-                if (uim.setInfo(name, pwd, year, sex)) {              // pwd가 중복이 아닐경우 DB에 회원정보 저장
+                if (uim.setInfo(name, pwd, year, sex)) {    // pwd 가 중복이 아닐경우 DB에 회원정보 저장
                     JOptionPane.showMessageDialog(null, "회원가입 성공");
                     dispose();
                 }
-                else
+                else    // pwd 가 중복이면 저장하지 않음
                     JOptionPane.showMessageDialog(null, "이미 사용 중인 비밀번호입니다");
             }
         });
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {    // 성별 선택 시 데이터 기억
         String s = e.getActionCommand();
         if (s.equals(radMale.getText()))
             sex = 0;

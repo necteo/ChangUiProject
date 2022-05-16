@@ -7,11 +7,11 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class LoginView extends JFrame {
+public class LoginView extends JFrame {     // 로그인 화면 클래스
     private JPasswordField txtPwd;
     private JTextField txtName;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) {    // 시작점
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -20,7 +20,7 @@ public class LoginView extends JFrame {
         });
     }
 
-    public LoginView() {
+    public LoginView() {    // 생성자에서 기본 화면 생성
         setTitle("로그인");
         setSize(280, 150);
         setResizable(false);
@@ -33,7 +33,7 @@ public class LoginView extends JFrame {
         setVisible(true);
     }
 
-    public void placeLoginPanel(JPanel panel){
+    public void placeLoginPanel(JPanel panel){  // 패널 구성
         panel.setLayout(null);
         JLabel lblName = new JLabel("이름");
         lblName.setBounds(10, 10, 80, 25);
@@ -52,7 +52,7 @@ public class LoginView extends JFrame {
         panel.add(txtPwd);
         txtPwd.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {    // 엔터 치면 로그인 시도
                 UserInfoManager uim = new UserInfoManager();
                 String info = uim.getInfo(txtName.getText(), String.valueOf(txtPwd.getPassword()));
                 if (isLoginValid(info)) {
@@ -67,7 +67,7 @@ public class LoginView extends JFrame {
         panel.add(btnLogin);
         btnLogin.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {    // 버튼 누르면 로그인 시도
                 UserInfoManager uim = new UserInfoManager();
                 String info = uim.getInfo(txtName.getText(), String.valueOf(txtPwd.getPassword()));
                 if (isLoginValid(info)) {
@@ -84,7 +84,7 @@ public class LoginView extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 new SignUpView();
-            }
+            }   // 회원가입 화면 출력
         });
     }
 
@@ -96,7 +96,7 @@ public class LoginView extends JFrame {
 
         String name = info.split(",")[0];
         String pwd = info.split(",")[1];
-        if(!txtName.getText().equals(name) || !String.valueOf(txtPwd.getPassword()).equals(pwd)){
+        if(!txtName.getText().equals(name) || !String.valueOf(txtPwd.getPassword()).equals(pwd)){ // 이름과 비밀번호가 불일치
             JOptionPane.showMessageDialog(null, "로그인 실패");
             return false;
         }

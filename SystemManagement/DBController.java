@@ -6,7 +6,7 @@ import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-public class DBController {
+public class DBController { // DB 연결을 위한 클래스
     public Connection conn = null;
     public Statement st = null;
     public PreparedStatement pst = null;
@@ -15,7 +15,7 @@ public class DBController {
     public DBController(){}
 
     // �����ͺ��̽��� �����Ѵ�.
-    public void dbConn() {
+    public void dbConn() {  // DB 연결
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -30,7 +30,7 @@ public class DBController {
     }
 
     // �����ͺ��̽��� �ݴ´�.
-    public void dbClose(){
+    public void dbClose(){  // DB 연결 종료
         try{
             if (rs != null) rs.close();
             if (st != null) st.close();
