@@ -94,20 +94,20 @@ public class FoodNtrView extends JFrame implements ActionListener {
             public void actionPerformed(ActionEvent e) {
                 NtrDataManager ndm = new NtrDataManager();
 
-//                try {
-//                    HashMap<String, String> foodNtrInfo = GetOpenData.getData(txtFood.getText());
-//                    DailyNutrient dn = new DailyNutrient();
-//                    dn.setDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-//                    dn.setTime(time);
-//                    dn.setCalories(Double.parseDouble(foodNtrInfo.get("calories")));
-//                    dn.setCarbohydrate(Double.parseDouble(foodNtrInfo.get("carbohydrate")));
-//                    dn.setProtein(Double.parseDouble(foodNtrInfo.get("protein")));
-//                    dn.setFat(Double.parseDouble(foodNtrInfo.get("fat")));
-//
-//                    ndm.insertData(dn);
-//                } catch (IOException | ParseException ex) {
-//                    throw new RuntimeException(ex);
-//                }
+                try {
+                    HashMap<String, String> foodNtrInfo = GetOpenData.getData(txtFood.getText());
+                    DailyNutrient dn = new DailyNutrient();
+                    dn.setDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                    dn.setTime(time);
+                    dn.setCalories(Double.parseDouble(foodNtrInfo.get("calories")));
+                    dn.setCarbohydrate(Double.parseDouble(foodNtrInfo.get("carbohydrate")));
+                    dn.setProtein(Double.parseDouble(foodNtrInfo.get("protein")));
+                    dn.setFat(Double.parseDouble(foodNtrInfo.get("fat")));
+
+                    ndm.insertData(dn);
+                } catch (IOException | ParseException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
     }
