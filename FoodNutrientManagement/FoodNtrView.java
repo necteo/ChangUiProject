@@ -80,7 +80,7 @@ public class FoodNtrView extends JFrame implements ActionListener {
         radLunch.addActionListener(this);
 
         radDinner = new JRadioButton("저녁");
-        radDinner.setBounds(195, 80, 50, 20);
+        radDinner.setBounds(205, 80, 50, 20);
         bgTime.add(radDinner);
         panel.add(radDinner);
         radDinner.addActionListener(this);
@@ -95,14 +95,14 @@ public class FoodNtrView extends JFrame implements ActionListener {
                 NtrDataManager ndm = new NtrDataManager();
 
                 try {
-                    HashMap<String, String> foodNtrInfo = GetOpenData.getData(txtFood.getText());
+                    FoodNutrient foodNtrInfo = GetOpenData.getData(txtFood.getText());
                     DailyNutrient dn = new DailyNutrient();
                     dn.setDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                     dn.setTime(time);
-                    dn.setCalories(Double.parseDouble(foodNtrInfo.get("calories")));
-                    dn.setCarbohydrate(Double.parseDouble(foodNtrInfo.get("carbohydrate")));
-                    dn.setProtein(Double.parseDouble(foodNtrInfo.get("protein")));
-                    dn.setFat(Double.parseDouble(foodNtrInfo.get("fat")));
+                    dn.setCalories(foodNtrInfo.getCalories());
+                    dn.setCarbohydrate(foodNtrInfo.getCarbohydrate());
+                    dn.setProtein(foodNtrInfo.getProtein());
+                    dn.setFat(foodNtrInfo.getFat());
 
                     ndm.insertData(dn);
                 } catch (IOException | ParseException ex) {

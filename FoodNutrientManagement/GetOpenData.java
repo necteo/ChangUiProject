@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 public class GetOpenData {
-    public static HashMap<String, String> getData(String foodName) throws IOException, ParseException {
+    public static FoodNutrient getData(String foodName) throws IOException, ParseException {
         StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1471000/FoodNtrIrdntInfoService1/getFoodNtrItdntList1"); /*URL*/
         urlBuilder.append("?").append(URLEncoder.encode("serviceKey", "UTF-8")).append("=ditvr6RhuH%2F8YEdJMyyqaCM7wYxAgA2k8uJgwIerCCPwNnXfilpxoemvXEaZH%2BdIs1CFqKGaHV60SMLZkqhRNA%3D%3D"); /*Service Key*/
         urlBuilder.append("&").append(URLEncoder.encode("pageNo", "UTF-8")).append("=").append(URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
@@ -43,17 +43,18 @@ public class GetOpenData {
         String result = sb.toString();
         System.out.println(result);
 
-        HashMap<String, String> foodNtrInfo = new HashMap<String, String>();
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObj = (JSONObject) jsonParser.parse(result);
         JSONObject body = (JSONObject) jsonObj.get("body");// response 로 부터 body 찾아오기
         JSONArray items = (JSONArray) body.get("items");
         JSONObject item = (JSONObject) items.get(0);
-        foodNtrInfo.put("name", (String) item.get("DESC_KOR"));
-        foodNtrInfo.put("calories", (String) item.get("NUTR_CONT1"));
-        foodNtrInfo.put("carbohydrate", (String) item.get("NUTR_CONT2"));
-        foodNtrInfo.put("protein", (String) item.get("NUTR_CONT3"));
-        foodNtrInfo.put("fat", (String) item.get("NUTR_CONT4"));
+
+        FoodNutrient foodNtrInfo = new FoodNutrient();
+        foodNtrInfo.setName((String) item.get("DESC_KOR"));
+        foodNtrInfo.setCalories((Double) item.get("NUTR_CONT1"));
+        foodNtrInfo.setCarbohydrate((Double) item.get("NUTR_CONT2"));
+        foodNtrInfo.setProtein((Double) item.get("NUTR_CONT3"));
+        foodNtrInfo.setFat((Double) item.get("NUTR_CONT4"));
 
         return foodNtrInfo;
     }
