@@ -10,21 +10,39 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GetOpenData {
-    public static FoodNutrient getData(String foodName) throws IOException, ParseException {
-        StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1471000/FoodNtrIrdntInfoService1/getFoodNtrItdntList1"); /*URL*/
-        urlBuilder.append("?").append(URLEncoder.encode("serviceKey", "UTF-8")).append("=ditvr6RhuH%2F8YEdJMyyqaCM7wYxAgA2k8uJgwIerCCPwNnXfilpxoemvXEaZH%2BdIs1CFqKGaHV60SMLZkqhRNA%3D%3D"); /*Service Key*/
-        urlBuilder.append("&").append(URLEncoder.encode("pageNo", "UTF-8")).append("=").append(URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
-        urlBuilder.append("&").append(URLEncoder.encode("numOfRows", "UTF-8")).append("=").append(URLEncoder.encode("1", "UTF-8")); /*한 페이지 결과 수*/
-        urlBuilder.append("&").append(URLEncoder.encode("desc_kor", "UTF-8")).append("=").append(URLEncoder.encode(foodName, "UTF-8")); /*식품이름*/
-        urlBuilder.append("&").append(URLEncoder.encode("type", "UTF-8")).append("=").append(URLEncoder.encode("json", "UTF-8")); /*응답데이터 형식(xml/json) Default: xml*/
-        URL url = new URL(urlBuilder.toString());
+    public static void main(String[] args) {
+        try {
+            ArrayList<FoodNutrient> fnList = getData("떡 ");
+            for (FoodNutrient fn: fnList) {
+                System.out.println(fn.getName() + " " + fn.getCalories() + " " + fn.getCarbohydrate() + " " + fn.getProtein());
+            }
+        } catch (IOException | ParseException e) {
+            throw new RuntimeException(e);
+        } catch (NullPointerException e) {
+            System.out.println("결과없음");
+        }
+    }
+    public static ArrayList<FoodNutrient> getData(String foodName) throws IOException, ParseException {
+        /*URL*/
+        String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api" +
+                "/" + "38bf763498dc403db6ba" + /*Service Key*/
+                "/" + URLEncoder.encode("I2790", StandardCharsets.UTF_8) + /*Service ID*/
+                "/" + URLEncoder.encode("json", StandardCharsets.UTF_8) + /*응답데이터 형식(xml/json) Default: xml*/
+                "/" + URLEncoder.encode("1", StandardCharsets.UTF_8) + /*요청시작위치*/
+                "/" + URLEncoder.encode("8", StandardCharsets.UTF_8) + /*요청종료위치*/
+                "/" + URLEncoder.encode("DESC_KOR", StandardCharsets.UTF_8) +
+                "=" + URLEncoder.encode(foodName, StandardCharsets.UTF_8); /*식품이름*/
+        URL url = new URL(urlBuilder);
         System.out.println(url);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-type", "application/json");
-        System.out.println("Response code: " + conn.getResponseCode());
+        System.out.println("Response Msg: " + conn.getResponseMessage() + "Response code: " + conn.getResponseCode());
         BufferedReader rd;
         if (conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
             rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -42,20 +60,42 @@ public class GetOpenData {
         String result = sb.toString();
         System.out.println(result);
 
+        ArrayList<FoodNutrient> foodNtrInfoList = new ArrayList<FoodNutrient>();
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObj = (JSONObject) jsonParser.parse(result);
-        JSONObject body = (JSONObject) jsonObj.get("body");// response 로 부터 body 찾아오기
-        JSONArray items = (JSONArray) body.get("items");
-        JSONObject item = (JSONObject) items.get(0);
+        JSONObject body = (JSONObject) jsonObj.get("I2790");// response 로 부터 body 찾아오기
+        JSONArray row = (JSONArray) body.get("row");
+        if (row == null) {
+            return null;
+        }
+        for (Object f : row) {
+            FoodNutrient foodNtrInfo = new FoodNutrient();
+            JSONObject food = (JSONObject) f;
+            foodNtrInfo.setName((String) food.get("DESC_KOR"));
+            if (food.get("NUTR_CONT1") == "") {
+                foodNtrInfo.setCalories(0);
+            } else {
+                foodNtrInfo.setCalories(Double.parseDouble((String) food.get("NUTR_CONT1")));
+            }
+            if (food.get("NUTR_CONT2") == "") {
+                foodNtrInfo.setCarbohydrate(0);
+            } else {
+                foodNtrInfo.setCarbohydrate(Double.parseDouble((String) food.get("NUTR_CONT2")));
+            }
+            if (food.get("NUTR_CONT3") == "") {
+                foodNtrInfo.setProtein(0);
+            } else {
+                foodNtrInfo.setProtein(Double.parseDouble((String) food.get("NUTR_CONT3")));
+            }
+            if (food.get("NUTR_CONT4") == "") {
+                foodNtrInfo.setFat(0);
+            } else {
+                foodNtrInfo.setFat(Double.parseDouble((String) food.get("NUTR_CONT4")));
+            }
+            foodNtrInfoList.add(foodNtrInfo);
+        }
 
-        FoodNutrient foodNtrInfo = new FoodNutrient();  // 공공데이터용 클래스에 데이터 저장 후 리턴
-        foodNtrInfo.setName((String) item.get("DESC_KOR"));
-        foodNtrInfo.setCalories((Double) item.get("NUTR_CONT1"));
-        foodNtrInfo.setCarbohydrate((Double) item.get("NUTR_CONT2"));
-        foodNtrInfo.setProtein((Double) item.get("NUTR_CONT3"));
-        foodNtrInfo.setFat((Double) item.get("NUTR_CONT4"));
-
-        return foodNtrInfo;
+        return foodNtrInfoList;
     }
 }
 

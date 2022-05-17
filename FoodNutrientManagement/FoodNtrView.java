@@ -5,6 +5,7 @@ import org.json.simple.parser.ParseException;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -20,10 +21,15 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
     private JRadioButton radDinner;
     private int time;
 
-    public static void main(String[] args) {
-        new FoodNtrView();
-    }   // 로그인 건너뛰고 테스트용
-    public FoodNtrView() {      // 생성자에서 기본 화면 생성
+    public static void main(String[] args) {   // 로그인 건너뛰고 테스트용
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new FoodNtrView();
+            }
+        });
+    }
+    public FoodNtrView() {      // 생성자에서 기본 화면 생성돼
         setTitle("식품 영양소 관리");
         setBounds(500, 300, 450, 430);
         setResizable(false);
@@ -57,9 +63,13 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         lblFood.setBounds(15, 30, 40, 20);
         panel.add(lblFood);
 
-        JTextField txtFood = new JTextField();
-        txtFood.setBounds(75, 30, 180, 20);
-        panel.add(txtFood);
+//        JTextField txtFood = new JTextField();
+//        txtFood.setBounds(75, 30, 180, 20);
+//        panel.add(txtFood);
+
+        AutoSuggest txtAutoSuggest = new AutoSuggest();
+        txtAutoSuggest.setBounds(75, 30, 180, 20);
+        panel.add(txtAutoSuggest);
 
         JLabel lblTime = new JLabel("시간대");
         lblTime.setBounds(15, 80, 40, 20);
@@ -94,14 +104,14 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                 NtrDataManager ndm = new NtrDataManager();
 
                 try {
-                    FoodNutrient foodNtrInfo = GetOpenData.getData(txtFood.getText());  // 입력된 식품명으로 공공데이터 가져옴
+                    ArrayList<FoodNutrient> foodNtrInfoList = GetOpenData.getData(txtAutoSuggest.getText());  // 입력된 식품명으로 공공데이터 가져옴
                     DailyNutrient dn = new DailyNutrient();     // DB 일일_영양소 테이블 저장용 클래스
                     dn.setDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                     dn.setTime(time);
-                    dn.setCalories(foodNtrInfo.getCalories());
-                    dn.setCarbohydrate(foodNtrInfo.getCarbohydrate());
-                    dn.setProtein(foodNtrInfo.getProtein());
-                    dn.setFat(foodNtrInfo.getFat());
+                    dn.setCalories(foodNtrInfoList.get(0).getCalories());   // 리스트의 첫번째 값으로 저장
+                    dn.setCarbohydrate(foodNtrInfoList.get(0).getCarbohydrate());
+                    dn.setProtein(foodNtrInfoList.get(0).getProtein());
+                    dn.setFat(foodNtrInfoList.get(0).getFat());
 
                     ndm.insertData(dn); // DB에 데이터 저장
                 } catch (IOException | ParseException ex) {
@@ -115,6 +125,12 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         JButton btnFoodRecommend = new JButton("식품 추천");
         btnFoodRecommend.setBounds(40, 160, 350, 70);
         panel.add(btnFoodRecommend);
+        btnFoodRecommend.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // 식품 추천 화면 출력
+            }
+        });
     }
 
     public void placeChartPanel(JPanel panel) {     // 차트 출력을 위한 기간을 입력받는 패널
@@ -174,8 +190,6 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         lblTo.setBounds(24, 335, 40, 20);
         panel.add(lblTo);
 
-        final Date _firstYear = Date.valueOf(LocalDate.parse("2022-01-01"));
-        final Date _lastYear = Date.valueOf(LocalDate.now());
         SpinnerDateModel _year = new SpinnerDateModel(lastYear, firstYear, lastYear, Calendar.YEAR);
         SpinnerNumberModel _month = new SpinnerNumberModel(1, 1, 12, 1);
         SpinnerNumberModel _day = new SpinnerNumberModel(1, 1, 31, 1);
@@ -237,7 +251,7 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                 int _month = (int) spnEndMonth.getValue();
                 int _day = (int) spnEndDay.getValue();          // 조건으로 준 기간에 따라 DB 에서 읽어온 데이터를 List 로 저장
                 ArrayList<DailyNutrient> dnList = ndm.readData(new int[]{year, month, day}, new int[]{_year, _month, _day});
-                NtrChartView fnm = new NtrChartView(dnList);    // 차트 화면 출력
+                new NtrChartView(dnList);    // 차트 화면 출력
             }
         });
     }
