@@ -12,12 +12,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class GetOpenData {
-    public static void main(String[] args) {
+    public static void main(String[] args) {    // 테스트용
         try {
-            ArrayList<FoodNutrient> fnList = getData("떡 ");
+            ArrayList<FoodNutrient> fnList = getData("떡");
             for (FoodNutrient fn: fnList) {
                 System.out.println(fn.getName() + " " + fn.getCalories() + " " + fn.getCarbohydrate() + " " + fn.getProtein());
             }
@@ -60,7 +59,7 @@ public class GetOpenData {
         String result = sb.toString();
         System.out.println(result);
 
-        ArrayList<FoodNutrient> foodNtrInfoList = new ArrayList<FoodNutrient>();
+        ArrayList<FoodNutrient> foodNtrInfoList = new ArrayList<>();
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObj = (JSONObject) jsonParser.parse(result);
         JSONObject body = (JSONObject) jsonObj.get("I2790");// response 로 부터 body 찾아오기

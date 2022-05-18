@@ -11,7 +11,7 @@ public class NtrDataManager {       // DB 일일_영양소 테이블의 입출�
     DBController db = new DBController();
 
     public ArrayList<DailyNutrient> readData(int[] startInfo, int[] endInfo) {  // DB 에서 기간에 따라 데이터 읽어오는 함수
-        ArrayList<DailyNutrient> dnList = new ArrayList<DailyNutrient>();   // 저장 후 리턴용
+        ArrayList<DailyNutrient> dnList = new ArrayList<>();   // 저장 후 리턴용
 
         try {
             db.dbConn();

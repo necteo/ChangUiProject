@@ -114,6 +114,8 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                     ndm.insertData(dn); // DB에 데이터 저장
                 } catch (IOException | ParseException ex) {
                     throw new RuntimeException(ex);
+                } catch (NullPointerException ex) {
+                    JOptionPane.showMessageDialog(null, "식품 정보가 없습니다.");
                 }
             }
         });
