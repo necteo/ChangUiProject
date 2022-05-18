@@ -105,14 +105,12 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
 
                 try {
                     ArrayList<FoodNutrient> foodNtrInfoList = GetOpenData.getData(txtAutoSuggest.getText());  // 입력된 식품명으로 공공데이터 가져옴
-                    DailyNutrient dn = new DailyNutrient();     // DB 일일_영양소 테이블 저장용 클래스
-                    dn.setDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-                    dn.setTime(time);
-                    dn.setCalories(foodNtrInfoList.get(0).getCalories());   // 리스트의 첫번째 값으로 저장
-                    dn.setCarbohydrate(foodNtrInfoList.get(0).getCarbohydrate());
-                    dn.setProtein(foodNtrInfoList.get(0).getProtein());
-                    dn.setFat(foodNtrInfoList.get(0).getFat());
-
+                    String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    double calories = foodNtrInfoList.get(0).getCalories();   // 리스트의 첫번째 값으로 저장
+                    double carbohydrate = foodNtrInfoList.get(0).getCarbohydrate();
+                    double protein =  foodNtrInfoList.get(0).getProtein();
+                    double fat = foodNtrInfoList.get(0).getFat();
+                    DailyNutrient dn = new DailyNutrient(date, time, calories, carbohydrate, protein, fat);     // DB 일일_영양소 테이블 저장용 클래스
                     ndm.insertData(dn); // DB에 데이터 저장
                 } catch (IOException | ParseException ex) {
                     throw new RuntimeException(ex);
