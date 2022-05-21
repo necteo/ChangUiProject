@@ -8,6 +8,15 @@ public class DailyNutrient {        // DB 일일_영양소 테이블 데이터�
     private double protein;         // 단백질
     private double fat;             // 지방
 
+    public DailyNutrient(String d, int t, double cal, double ch, double p, double f) {
+        this.date = d;
+        this.time = t;
+        this.calories = cal;
+        this.carbohydrate = ch;
+        this.protein = p;
+        this.fat = f;
+    }
+
     public void setDate(String date) { this.date = date; }
     public void setTime(int time) { this.time = time; }
     public void setCalories(double calories) { this.calories = calories; }
