@@ -80,6 +80,7 @@ public class SignUpView extends JFrame implements ActionListener {  // 회원가
                 if (uim.setInfo(name, pwd, year, sex)) {    // pwd 가 중복이 아닐경우 DB에 회원정보 저장
                     JOptionPane.showMessageDialog(null, "회원가입 성공");
                     dispose();
+                    UserData User = new UserData(name, year, sex);
                 }
                 else    // pwd 가 중복이면 저장하지 않음
                     JOptionPane.showMessageDialog(null, "이미 사용 중인 비밀번호입니다");

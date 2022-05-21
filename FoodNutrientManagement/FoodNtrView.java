@@ -1,19 +1,22 @@
 package FoodNutrientManagement;
 
 import org.json.simple.parser.ParseException;
+import org.xml.sax.SAXException;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.sql.Date;
+import java.util.Random;
 
 public class FoodNtrView extends JFrame implements ActionListener {     // 식품명을 저장하는 화면으로 가장 메인이 되는 화면 클래스
     private JRadioButton radBreakfast;
@@ -129,6 +132,28 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
             @Override
             public void actionPerformed(ActionEvent e) {
                 // 식품 추천 화면 출력
+                Random ran = new Random();
+                int n;
+
+                  n = ran.nextInt(189731);
+
+                String s = String.format("%06d", n);
+                String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=D"+s;
+                String foodname = null;
+                try {
+                    foodname = GetOpenData.recommend(urlBuilder);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                } catch (ParseException ex) {
+                    throw new RuntimeException(ex);
+                } catch (ParserConfigurationException ex) {
+                    throw new RuntimeException(ex);
+                } catch (SAXException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                JFrame jFrame = new JFrame();
+                JOptionPane.showMessageDialog(jFrame, foodname);
             }
         });
     }
