@@ -80,7 +80,7 @@ public class GetOpenData {
                 foodNtrInfo.setCalories(0);
             } else {
                 foodNtrInfo.setCalories(Double.parseDouble((String) food.get("NUTR_CONT1")));
-                if(User.)
+                //if(User)   // 사용자 로그인하거나, 새로생성시 객체 만들어서  하루권장량 설정됨ᆢㄴ 음식 파싱
 
             }
             if (food.get("NUTR_CONT2") == "") {

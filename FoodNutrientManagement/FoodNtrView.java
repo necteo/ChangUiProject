@@ -1,5 +1,6 @@
 package FoodNutrientManagement;
 
+import UserManagement.UserInfoManager;
 import org.json.simple.parser.ParseException;
 import org.xml.sax.SAXException;
 
@@ -10,6 +11,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -28,13 +31,13 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new FoodNtrView();
+                new FoodNtrView("hong");
             }
         });
     }
-    public FoodNtrView() {      // 생성자에서 기본 화면 생성돼
+    public FoodNtrView(String id) {      // 생성자에서 기본 화면 생성돼
         setTitle("식품 영양소 관리");
-        setBounds(500, 300, 450, 430);
+        setBounds(500, 300, 450, 460);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
@@ -52,6 +55,14 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         panel.add(separator1);
 
         placeChartPanel(panel);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                new UserInfoManager().controlLoginState(id, 1);
+                super.windowClosing(e);
+            }
+        });
 
         add(panel);
         setVisible(true);
@@ -265,7 +276,28 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         btnResult.setBounds(290, 295, 120, 60);
         btnResult.addActionListener(this);
         panel.add(btnResult);
-        btnResult.addActionListener(new ActionListener() {
+
+        JLabel lblNtrs = new JLabel("통계 표시 영양소");
+        lblNtrs.setBounds(18, 375, 100, 20);
+        panel.add(lblNtrs);
+
+        JCheckBox chbCal = new JCheckBox("칼로리", true);
+        chbCal.setBounds(130, 375, 70, 20);
+        panel.add(chbCal);
+
+        JCheckBox chbCarb = new JCheckBox("탄수화물", true);
+        chbCarb.setBounds(200, 375, 80, 20);
+        panel.add(chbCarb);
+
+        JCheckBox chbPro = new JCheckBox("단백질", true);
+        chbPro.setBounds(285, 375, 70, 20);
+        panel.add(chbPro);
+
+        JCheckBox chbFat = new JCheckBox("지방", true);
+        chbFat.setBounds(360, 375, 60, 20);
+        panel.add(chbFat);
+
+        btnResult.addActionListener(new ActionListener() {  // 통계 차트 표시 버튼
             @Override
             public void actionPerformed(ActionEvent e) {
                 NtrDataManager ndm = new NtrDataManager();
@@ -276,7 +308,11 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                 int _month = (int) spnEndMonth.getValue();
                 int _day = (int) spnEndDay.getValue();          // 조건으로 준 기간에 따라 DB 에서 읽어온 데이터를 List 로 저장
                 ArrayList<DailyNutrient> dnList = ndm.readData(new int[]{year, month, day}, new int[]{_year, _month, _day});
-                new NtrChartView(dnList);    // 차트 화면 출력
+                boolean[] isNtrsChecked = new boolean[]{chbCal.isSelected(),
+                                                        chbCarb.isSelected(),
+                                                        chbPro.isSelected(),
+                                                        chbFat.isSelected()};
+                new NtrChartView(dnList, isNtrsChecked);    // 차트 화면 출력
             }
         });
     }
