@@ -1,5 +1,7 @@
 package FoodNutrientManagement;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.xml.sax.SAXException;
 
@@ -139,21 +141,39 @@ public class FoodNtrView extends JFrame implements ActionListener {     // ÏãùÌí
 
                 String s = String.format("%06d", n);
                 String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=D"+s;
-                String foodname = null;
-                try {
-                    foodname = GetOpenData.recommend(urlBuilder);
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                } catch (ParseException ex) {
-                    throw new RuntimeException(ex);
-                } catch (ParserConfigurationException ex) {
-                    throw new RuntimeException(ex);
-                } catch (SAXException ex) {
-                    throw new RuntimeException(ex);
+                JSONArray jsonArray = new JSONArray();
+                for(int i=0; i<2; i++) {
+                    try {
+                        jsonArray.add(GetOpenData.recommend(urlBuilder));
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (ParseException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (ParserConfigurationException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (SAXException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+                String list[] = new String[2];
+                JSONObject element;
+                JSONArray row;
+                JSONObject name;
+                String val;
+                for(int i = 0; i<2 ; i++)
+                {
+                    element = (JSONObject) jsonArray.get(i);
+                    row = (JSONArray) element.get("row");
+                    name = (JSONObject) row.get(0);
+                    val = (String) name.get("DESC_KOR");
+                    list[i]= val;
                 }
 
-                JFrame jFrame = new JFrame();
-                JOptionPane.showMessageDialog(jFrame, foodname);
+                /*JFrame jFrame = new JFrame();
+                JComboBox<String> FoodList = new JComboBox<>(list);
+                jFrame.add(FoodList);
+                jFrame.setSize(300,300);
+                jFrame.setVisible(true);*/
             }
         });
     }
