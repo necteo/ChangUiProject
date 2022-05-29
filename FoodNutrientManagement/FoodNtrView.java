@@ -1,6 +1,10 @@
 package FoodNutrientManagement;
 
+import SystemManagement.Client;
+import SystemManagement.Protocol;
 import UserManagement.UserInfoManager;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.xml.sax.SAXException;
 
@@ -14,6 +18,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -26,16 +32,17 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
     private JRadioButton radLunch;
     private JRadioButton radDinner;
     private int time;
+    private Client client;
 
     public static void main(String[] args) {   // 로그인 건너뛰고 테스트용
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new FoodNtrView("hong");
+                new FoodNtrView(new Client(),"hong");
             }
         });
     }
-    public FoodNtrView(String id) {      // 생성자에서 기본 화면 생성돼
+    public FoodNtrView(Client c, String id) {      // 생성자에서 기본 화면 생성돼
         setTitle("식품 영양소 관리");
         setBounds(500, 300, 450, 460);
         setResizable(false);
@@ -56,16 +63,25 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
 
         placeChartPanel(panel);
 
+        add(panel);
+        setVisible(true);
+
+        client = c;
+
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 new UserInfoManager().controlLoginState(id, 1);
+                try {
+                    client.protocol = new Protocol(Protocol.PT_EXIT);
+                    client.os.write(client.protocol.getPacket());
+                    client.close();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
                 super.windowClosing(e);
             }
         });
-
-        add(panel);
-        setVisible(true);
     }
 
     public void placeFoodNtrPanel(JPanel panel) {   // 식품명을 입력받는 패널
@@ -115,22 +131,36 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         btnInput.addActionListener(new ActionListener() {   // 버튼이 눌리면
             @Override
             public void actionPerformed(ActionEvent e) {
-                NtrDataManager ndm = new NtrDataManager();
 
-                try {
-                    ArrayList<FoodNutrient> foodNtrInfoList = GetOpenData.getData(txtAutoSuggest.getText());  // 입력된 식품명으로 공공데이터 가져옴
-                    String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                    double calories = foodNtrInfoList.get(0).getCalories();   // 리스트의 첫번째 값으로 저장
-                    double carbohydrate = foodNtrInfoList.get(0).getCarbohydrate();
-                    double protein =  foodNtrInfoList.get(0).getProtein();
-                    double fat = foodNtrInfoList.get(0).getFat();
-                    DailyNutrient dn = new DailyNutrient(date, time, calories, carbohydrate, protein, fat);     // DB 일일_영양소 테이블 저장용 클래스
-                    ndm.insertData(dn); // DB에 데이터 저장
-                } catch (IOException | ParseException ex) {
-                    throw new RuntimeException(ex);
-                } catch (NullPointerException ex) {
-                    JOptionPane.showMessageDialog(null, "식품 정보가 없습니다.");
-                }
+                Thread cw = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            ArrayList<FoodNutrient> foodNtrInfoList = GetOpenData.getData(txtAutoSuggest.getText());  // 입력된 식품명으로 공공데이터 가져옴
+
+                            client.protocol = new Protocol(Protocol.PT_RES_DAILY_NUTR);
+                            System.out.println("영양소 정보 전송");
+                            client.os.write(client.protocol.getPacket());
+
+                            String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                            double calories = foodNtrInfoList.get(0).getCalories();   // 리스트의 첫번째 값으로 저장
+                            double carbohydrate = foodNtrInfoList.get(0).getCarbohydrate();
+                            double protein =  foodNtrInfoList.get(0).getProtein();
+                            double fat = foodNtrInfoList.get(0).getFat();
+                            DailyNutrient dn = new DailyNutrient(date, time, calories, carbohydrate, protein, fat);     // DB 일일_영양소 테이블 저장용 클래스
+
+                            ObjectOutputStream oos = new ObjectOutputStream(client.os);
+                            oos.writeObject(dn);
+                            oos.flush();
+                        } catch (IOException | ParseException ex) {
+                            throw new RuntimeException(ex);
+                        } catch (NullPointerException ex) {
+                            JOptionPane.showMessageDialog(null, "식품 정보가 없습니다.");
+                        }
+                    }
+                });
+
+                cw.start();
             }
         });
     }
@@ -150,21 +180,38 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
 
                 String s = String.format("%06d", n);
                 String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=D"+s;
-                String foodname = null;
-                try {
-                    foodname = GetOpenData.recommend(urlBuilder);
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                } catch (ParseException ex) {
-                    throw new RuntimeException(ex);
-                } catch (ParserConfigurationException ex) {
-                    throw new RuntimeException(ex);
-                } catch (SAXException ex) {
-                    throw new RuntimeException(ex);
+                JSONArray jsonArray = new JSONArray();
+                for(int i=0; i<2; i++) {
+                    try {
+                        jsonArray.add(GetOpenData.recommend(urlBuilder));
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (ParseException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (ParserConfigurationException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (SAXException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
-
-                JFrame jFrame = new JFrame();
-                JOptionPane.showMessageDialog(jFrame, foodname);
+                String list[] = new String[2];
+                JSONObject element;
+                JSONArray row;
+                JSONObject name;
+                String val;
+                for(int i = 0; i<2 ; i++)
+                {
+                    element = (JSONObject) jsonArray.get(i);
+                    row = (JSONArray) element.get("row");
+                    name = (JSONObject) row.get(0);
+                    val = (String) name.get("DESC_KOR");
+                    list[i]= val;
+                }
+                /*JFrame jFrame = new JFrame();
+                JComboBox<String> FoodList = new JComboBox<>(list);
+                jFrame.add(FoodList);
+                jFrame.setSize(300,300);
+                jFrame.setVisible(true);*/
             }
         });
     }
@@ -300,19 +347,51 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         btnResult.addActionListener(new ActionListener() {  // 통계 차트 표시 버튼
             @Override
             public void actionPerformed(ActionEvent e) {
-                NtrDataManager ndm = new NtrDataManager();
-                int year = Integer.parseInt(spnStartYear.getValue().toString().substring(24));
-                int month = (int) spnStartMonth.getValue();
-                int day = (int) spnStartDay.getValue();
-                int _year = Integer.parseInt(spnEndYear.getValue().toString().substring(24));
-                int _month = (int) spnEndMonth.getValue();
-                int _day = (int) spnEndDay.getValue();          // 조건으로 준 기간에 따라 DB 에서 읽어온 데이터를 List 로 저장
-                ArrayList<DailyNutrient> dnList = ndm.readData(new int[]{year, month, day}, new int[]{_year, _month, _day});
-                boolean[] isNtrsChecked = new boolean[]{chbCal.isSelected(),
-                                                        chbCarb.isSelected(),
-                                                        chbPro.isSelected(),
-                                                        chbFat.isSelected()};
-                new NtrChartView(dnList, isNtrsChecked);    // 차트 화면 출력
+                Thread cw = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            client.protocol = new Protocol(Protocol.PT_RES_CHART_DATE);
+                            System.out.println("통계 차트 날짜 정보 전송");
+
+                            String year = spnStartYear.getValue().toString().substring(24);
+                            String month = String.valueOf(spnStartMonth.getValue());
+                            String day = String.valueOf(spnStartDay.getValue());
+                            String _year = spnEndYear.getValue().toString().substring(24);
+                            String _month = String.valueOf(spnEndMonth.getValue());
+                            String _day = String.valueOf(spnEndDay.getValue());          // 조건으로 준 기간에 따라 DB 에서 읽어온 데이터를 List 로 저장
+                            client.protocol.setDate(new String[]{year, month, day}, new String[]{_year, _month, _day});
+                            client.os.write(client.protocol.getPacket());
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+
+                Thread cr = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            ObjectInputStream ois = new ObjectInputStream(client.is);
+                            ArrayList<DailyNutrient> dnList = (ArrayList<DailyNutrient>) ois.readObject();
+                            System.out.println("영양소 정보를 받음");
+
+                            boolean[] isNtrsChecked = new boolean[]{
+                                    chbCal.isSelected(),
+                                    chbCarb.isSelected(),
+                                    chbPro.isSelected(),
+                                    chbFat.isSelected()};
+                            new NtrChartView(dnList, isNtrsChecked);    // 차트 화면 출력
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        } catch (ClassNotFoundException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                });
+
+                cw.start();
+                cr.start();
             }
         });
     }

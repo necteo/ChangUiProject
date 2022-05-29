@@ -10,15 +10,15 @@ import java.util.ArrayList;
 public class NtrDataManager {       // DB 일일_영양소 테이블의 입출력을 담당하는 클래스
     DBController db = new DBController();
 
-    public ArrayList<DailyNutrient> readData(int[] startInfo, int[] endInfo) {  // DB 에서 기간에 따라 데이터 읽어오는 함수
+    public ArrayList<DailyNutrient> readData(int[] startDate, int[] endDate) {  // DB 에서 기간에 따라 데이터 읽어오는 함수
         ArrayList<DailyNutrient> dnList = new ArrayList<>();   // 저장 후 리턴용
 
         try {
             db.dbConn();
             String sql = "select * from 일일_영양소 where 날짜 between ? and ?";
             db.pst = db.conn.prepareStatement(sql);
-            db.pst.setString(1, startInfo[0] + "-" + startInfo[1] + "-" +  startInfo[2]);
-            db.pst.setString(2, endInfo[0] + "-" + endInfo[1] + "-" +  endInfo[2]);
+            db.pst.setString(1, startDate[0] + "-" + startDate[1] + "-" +  startDate[2]);
+            db.pst.setString(2, endDate[0] + "-" + endDate[1] + "-" +  endDate[2]);
             db.rs = db.pst.executeQuery();
             while (db.rs.next()) {
                 String date = db.rs.getDate("날짜").toString();

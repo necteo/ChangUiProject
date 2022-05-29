@@ -1,6 +1,5 @@
 package FoodNutrientManagement;
 
-import UserManagement.SignUpView.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -80,8 +79,6 @@ public class GetOpenData {
                 foodNtrInfo.setCalories(0);
             } else {
                 foodNtrInfo.setCalories(Double.parseDouble((String) food.get("NUTR_CONT1")));
-                //if(User)   // 사용자 로그인하거나, 새로생성시 객체 만들어서  하루권장량 설정됨ᆢㄴ 음식 파싱
-
             }
             if (food.get("NUTR_CONT2") == "") {
                 foodNtrInfo.setCarbohydrate(0);
@@ -104,7 +101,7 @@ public class GetOpenData {
         return foodNtrInfoList;
     }
 
-    public static String recommend(String code) throws IOException, ParseException, ParserConfigurationException, SAXException {
+    public static JSONObject recommend(String code) throws IOException, ParseException, ParserConfigurationException, SAXException {
         /*URL*/
 
         URL url = new URL(code);
@@ -130,8 +127,6 @@ public class GetOpenData {
         JSONObject jsonObj = (JSONObject) jsonParser.parse(result);
         JSONObject body = (JSONObject) jsonObj.get("I2790");// response 로 부터 body 찾아오기
 
-        JSONArray row = (JSONArray) body.get("row");
-
         JSONObject msg = (JSONObject) body.get("RESULT");
 
         String val = "";
@@ -144,17 +139,10 @@ public class GetOpenData {
 
             String s = String.format("%06d", n);
             String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=D"+s;
-            val = recommend(urlBuilder);
-          return val;
+            JSONObject temp= new JSONObject();
+            temp = recommend(urlBuilder);
+            return temp;
         }
-        if (row == null) {
-            return null;
-        }
-
-        JSONObject TEMP= (JSONObject) row.get(0);
-        val = (String) TEMP.get("DESC_KOR");
-        return val;
-
+        return body;
     }
 }
-

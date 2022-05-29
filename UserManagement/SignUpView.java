@@ -1,8 +1,14 @@
 package UserManagement;
 
+import FoodNutrientManagement.FoodNtrView;
+import SystemManagement.Client;
+import SystemManagement.Protocol;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.time.LocalDate;
 
 public class SignUpView extends JFrame implements ActionListener {  // 회원가입 화면 클래스
@@ -11,8 +17,9 @@ public class SignUpView extends JFrame implements ActionListener {  // 회원가
     private JRadioButton radFemale;
     private int sex;
     private final int firstYear = 1900;
+    private Client client;
 
-    public SignUpView() {   // 생성자에서 기본 화면 생성
+    public SignUpView(Client c) {   // 생성자에서 기본 화면 생성
         setTitle("회원가입");
         setSize(280, 280);
         setResizable(false);
@@ -23,6 +30,8 @@ public class SignUpView extends JFrame implements ActionListener {  // 회원가
         placeSignUpView(panel);
         add(panel);
         setVisible(true);
+
+        client = c;
     }
 
     public void placeSignUpView(JPanel panel) { // 패널 구성
@@ -92,19 +101,67 @@ public class SignUpView extends JFrame implements ActionListener {  // 회원가
         btnSignUp.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String id = txtID.getText();
-                String  pwd = String.valueOf(txtPwd.getPassword());
-                String name = txtName.getText();
-                int year = (int) cbxYear.getSelectedItem();
+                Thread cw = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            synchronized (client) {
+                                client.protocol = new Protocol(Protocol.PT_RES_SIGN_UP);
+                                System.out.println("회원가입 정보 전송");
+                                client.os.write(client.protocol.getPacket());
+                            }
+                            String id = txtID.getText();
+                            String pwd = String.valueOf(txtPwd.getPassword());
+                            String name = txtName.getText();
+                            int year = (int) cbxYear.getSelectedItem();
+                            UserDTO user = new UserDTO(id, pwd, name, year, sex);
 
-                UserInfoManager uim = new UserInfoManager();
-                if (uim.setInfo(id, pwd, name, year, sex)) {    // pwd 가 중복이 아닐경우 DB에 회원정보 저장
-                    JOptionPane.showMessageDialog(null, "회원가입 성공");
-                    dispose();
-                    UserData User = new UserData(name, year, sex);
-                } else {   // pwd 가 중복이면 저장하지 않음
-                    JOptionPane.showMessageDialog(null, "이미 사용 중인 비밀번호입니다");
-                }
+                            ObjectOutputStream oos = new ObjectOutputStream(client.os);
+                            oos.writeObject(user);
+                            oos.flush();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+
+                Thread cr = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            synchronized (client) {
+                                client.protocol = new Protocol();
+                            }
+                            client.buf = client.protocol.getPacket();
+                            client.is.read(client.buf);
+                            int packetType = client.buf[0];
+                            client.protocol.setPacket(packetType,client.buf);
+                            if(packetType == Protocol.PT_EXIT){
+                                System.out.println("클라이언트 종료");
+                            }
+
+                            if (packetType == Protocol.PT_SIGN_UP_RESULT) {
+                                System.out.println("서버가 회원가입 결과 전송.");
+                                String result = client.protocol.getSignUpResult();
+                                if (result.equals("1")) {
+                                    System.out.println("회원가입 성공");
+                                    JOptionPane.showMessageDialog(null, "회원가입 성공");
+                                    dispose();
+                                } else if (result.equals("2")) {
+                                    System.out.println("ID가 중복");
+                                    JOptionPane.showMessageDialog(null, "이미 사용 중인 ID 입니다");
+                                } else {
+                                    System.out.println("알 수 없는 패킷");
+                                }
+                            }
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+
+                cw.start();
+                cr.start();
             }
         });
     }

@@ -1,26 +1,33 @@
 package UserManagement;
 
 import FoodNutrientManagement.FoodNtrView;
+import SystemManagement.Client;
+import SystemManagement.Protocol;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class LoginView extends JFrame implements ActionListener{     // 로그인 화면 클래스
     private JPasswordField txtPwd;
     private JTextField txtID;
+    private Client client;
 
     public static void main(String[] args) {    // 시작점
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new LoginView();
-            }
-        });
+        try {
+            new LoginView();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public LoginView() {    // 생성자에서 기본 화면 생성
+    public LoginView() throws IOException {    // 생성자에서 기본 화면 생성
         setTitle("로그인");
         setSize(280, 150);
         setResizable(false);
@@ -31,6 +38,22 @@ public class LoginView extends JFrame implements ActionListener{     // 로그�
         placeLoginPanel(panel);
         add(panel);
         setVisible(true);
+
+        client = new Client();
+        client.conn();
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                try {
+                    client.protocol = new Protocol(Protocol.PT_EXIT);
+                    client.os.write(client.protocol.getPacket());
+                    client.close();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+                super.windowClosing(e);
+            }
+        });
     }
 
     public void placeLoginPanel(JPanel panel){  // 패널 구성
@@ -63,38 +86,67 @@ public class LoginView extends JFrame implements ActionListener{     // 로그�
         btnSignUp.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new SignUpView();
+                new SignUpView(client);
             }   // 회원가입 화면 출력
         });
     }
 
-    public boolean isLoginValid(String info){
-        if (info.equals(",")) {   // 해당하는 계정이 없는 경우
-            JOptionPane.showMessageDialog(null, "로그인 실패");
-            return false;
-        }
-
-        String id = info.split(",")[0];
-        String pwd = info.split(",")[1];
-        if(!txtID.getText().equals(id) || !String.valueOf(txtPwd.getPassword()).equals(pwd)){ // id와 비밀번호가 불일치
-            JOptionPane.showMessageDialog(null, "로그인 실패");
-            return false;
-        }
-        JOptionPane.showMessageDialog(null, "로그인 성공");
-        return true;
-    }
-
     @Override
     public void actionPerformed(ActionEvent e) {
-        UserInfoManager uim = new UserInfoManager();
-        String id = txtID.getText();
-        String pwd = String.valueOf(txtPwd.getPassword());
-        String info = uim.getInfo(id, pwd);
+        Thread cw = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    synchronized (client) {
+                        client.protocol = new Protocol(Protocol.PT_RES_LOGIN);
+                        client.protocol.setId(txtID.getText());
+                        System.out.println(client.protocol.getId());
+                        client.protocol.setPassword(String.valueOf(txtPwd.getPassword()));
+                        System.out.println(client.protocol.getPassword());
+                        System.out.println("로그인 정보 전송");
+                        client.os.write(client.protocol.getPacket());
+                    }
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
 
-        if (isLoginValid(info)) {
-            uim.controlLoginState(id, 0);  // 로그인 상태가 아님
-            dispose();              // 로그인 성공하면 창 닫고 식품정보창을 띄운다
-            new FoodNtrView(id);
-        }
+        Thread cr = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    synchronized (client) {
+                        client.protocol = new Protocol();
+                    }
+                    client.buf = client.protocol.getPacket();
+                    client.is.read(client.buf);
+                    int packetType = client.buf[0];
+                    client.protocol.setPacket(packetType,client.buf);
+                    if(packetType == Protocol.PT_EXIT){
+                        System.out.println("클라이언트 종료");
+                    }
+
+                    if (packetType == Protocol.PT_LOGIN_RESULT) {
+                        System.out.println("서버가 로그인 결과 전송.");
+                        String result = client.protocol.getLoginResult();
+                        if (result.equals("1")) {
+                            System.out.println("로그인 성공");
+                            new FoodNtrView(client, txtID.getText());
+                            dispose();
+                        } else if (result.equals("2")) {
+                            System.out.println("아이디가 존재하지 않음");
+                        } else {
+                            System.out.println("알 수 없는 패킷");
+                        }
+                    }
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
+        cw.start();
+        cr.start();
     }
 }

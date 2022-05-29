@@ -1,6 +1,9 @@
 package FoodNutrientManagement;
 
-public class DailyNutrient {        // DB 일일_영양소 테이블 데이터를 저장하는 클래스
+import java.io.Serializable;
+
+public class DailyNutrient implements Serializable {        // DB 일일_영양소 테이블 데이터를 저장하는 클래스
+    private static final long serialVersionUID = 2L;
     private String date;            // 날짜
     private int time;               // 시간대
     private double calories;        // 열량
