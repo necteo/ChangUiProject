@@ -33,31 +33,17 @@ public class Protocol implements Serializable {
         getPacket(protocolType);
     }
 
-    // 프로토콜 타입에 따라 바이트 배열 packet의 length가 다름
+    // 프로토콜 타입에 따라 바이트 배열 packet 의 length 가 다름
     public byte[] getPacket(int protocolType) {
         if(packet==null){
-            switch(protocolType){
-                case PT_RES_LOGIN :
-                    packet = new byte[LEN_PROTOCOL_TYPE+LEN_LOGIN_ID+LEN_LOGIN_PASSWORD];
-                    break;
-                case PT_UNDEFINED :
-                    packet = new byte[LEN_MAX];
-                    break;
-                case PT_LOGIN_RESULT :
-                    packet = new byte[LEN_PROTOCOL_TYPE+LEN_LOGIN_RESULT];
-                    break;
-                case PT_RES_SIGN_UP:
-                case PT_CHART_DATA_RESULT:
-                case PT_RES_DAILY_NUTR:
-                case PT_EXIT :
-                    packet = new byte[LEN_PROTOCOL_TYPE];
-                    break;
-                case PT_SIGN_UP_RESULT:
-                    packet = new byte[LEN_PROTOCOL_TYPE+LEN_SIGN_UP_RESULT];
-                    break;
-                case PT_RES_CHART_DATE:
-                    packet = new byte[LEN_PROTOCOL_TYPE+LEN_CHART_DATE];
-                    break;
+            switch (protocolType) {
+                case PT_RES_LOGIN -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_LOGIN_PASSWORD];
+                case PT_UNDEFINED -> packet = new byte[LEN_MAX];
+                case PT_LOGIN_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_RESULT];
+                case PT_RES_SIGN_UP, PT_CHART_DATA_RESULT, PT_RES_DAILY_NUTR, PT_EXIT ->
+                        packet = new byte[LEN_PROTOCOL_TYPE];
+                case PT_SIGN_UP_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_SIGN_UP_RESULT];
+                case PT_RES_CHART_DATE -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_CHART_DATE];
             } // end switch
         } // end if
         packet[0] = (byte)protocolType;	// packet 바이트 배열의 첫 번째 바이트에 프로토콜 타입 설정
@@ -66,11 +52,11 @@ public class Protocol implements Serializable {
 
     // 로그인후 성공/실패의 결과 값을 프로토콜로부터 추출하여 문자열로 리턴
     public String getLoginResult() {
-        // String의 다음 생성자를 사용 : String(byte[] bytes, int offset, int length)
+        // String 의 다음 생성자를 사용 : String(byte[] bytes, int offset, int length)
         return new String(packet, LEN_PROTOCOL_TYPE, LEN_LOGIN_RESULT).trim();
     }
 
-    // String ok를 byte[]로 만들어서 packet의 프로토콜 타입 바로 뒤에 추가
+    // String ok를 byte[]로 만들어서 packet 의 프로토콜 타입 바로 뒤에 추가
     public void setLoginResult(String ok) {
         // arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
         System.arraycopy(ok.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE, ok.trim().getBytes().length);
@@ -111,7 +97,7 @@ public class Protocol implements Serializable {
         return new String(packet, LEN_PROTOCOL_TYPE, LEN_LOGIN_ID).trim();
     }
 
-    // byte[] packet에 String ID를 byte[]로 만들어 프로토콜 타입 바로 뒤에 추가
+    // byte[] packet 에 String ID를 byte[]로 만들어 프로토콜 타입 바로 뒤에 추가
     public void setId(String id) {
         System.arraycopy(id.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE, id.trim().getBytes().length);
         packet[LEN_PROTOCOL_TYPE + id.trim().getBytes().length] = '\0';

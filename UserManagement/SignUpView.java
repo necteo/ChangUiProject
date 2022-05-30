@@ -1,6 +1,5 @@
 package UserManagement;
 
-import FoodNutrientManagement.FoodNtrView;
 import SystemManagement.Client;
 import SystemManagement.Protocol;
 
@@ -16,7 +15,6 @@ public class SignUpView extends JFrame implements ActionListener {  // 회원가
     private JRadioButton radMale;
     private JRadioButton radFemale;
     private int sex;
-    private final int firstYear = 1900;
     private Client client;
 
     public SignUpView(Client c) {   // 생성자에서 기본 화면 생성
@@ -66,6 +64,7 @@ public class SignUpView extends JFrame implements ActionListener {  // 회원가
 
         JComboBox<Integer> cbxYear = new JComboBox<>();
         DefaultComboBoxModel cbm = new DefaultComboBoxModel();
+        int firstYear = 1900;
         for (int i = firstYear; i <= LocalDate.now().getYear(); i++) {
             cbm.addElement(i);
         }

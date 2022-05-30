@@ -17,7 +17,7 @@ import javax.swing.JTextField;
 public class AutoSuggest extends JComboBox<String> {
 
     private final JTextField txtSug;
-    private final Vector<String> foodList = new Vector<String>();
+    private final Vector<String> foodList = new Vector<>();
     private boolean layingOut = false;
     private int widestLength = 0;
     private boolean wide = false;
@@ -104,7 +104,7 @@ public class AutoSuggest extends JComboBox<String> {
             setSelectedIndex(-1);
         } else {
             try {
-                ArrayList<String> tags = new ArrayList<String>();
+                ArrayList<String> tags = new ArrayList<>();
                 ArrayList<FoodNutrient> foods = GetOpenData.getData(text);
                 if (foods != null) {
                     for (FoodNutrient tag : foods) {
@@ -157,7 +157,7 @@ public class AutoSuggest extends JComboBox<String> {
     }
 
     /**
-     *  넓은 드랍다운 리스트를 사용할 때. true를 주면 콤보박스보다 드랍다운리스트가 커짐.
+     *  넓은 드랍다운 리스트를 사용할 때. true 를 주면 콤보박스보다 드랍다운리스트가 커짐.
      * @param wide true/false
      */
     public void setWide(boolean wide) {

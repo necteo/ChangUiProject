@@ -184,28 +184,22 @@ public class FoodNtrView extends JFrame implements ActionListener {     // ì‹í’
                 for(int i=0; i<2; i++) {
                     try {
                         jsonArray.add(GetOpenData.recommend(urlBuilder));
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    } catch (ParseException ex) {
-                        throw new RuntimeException(ex);
-                    } catch (ParserConfigurationException ex) {
-                        throw new RuntimeException(ex);
-                    } catch (SAXException ex) {
+                    } catch (IOException | SAXException | ParserConfigurationException | ParseException ex) {
                         throw new RuntimeException(ex);
                     }
                 }
-                String list[] = new String[2];
+                String[] list = new String[2];
                 JSONObject element;
                 JSONArray row;
                 JSONObject name;
                 String val;
-                for(int i = 0; i<2 ; i++)
+                for(int i = 0; i < 2 ; i++)
                 {
                     element = (JSONObject) jsonArray.get(i);
                     row = (JSONArray) element.get("row");
                     name = (JSONObject) row.get(0);
                     val = (String) name.get("DESC_KOR");
-                    list[i]= val;
+                    list[i] = val;
                 }
                 /*JFrame jFrame = new JFrame();
                 JComboBox<String> FoodList = new JComboBox<>(list);

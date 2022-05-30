@@ -10,9 +10,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class ConnectionWrap implements Runnable {
-    private Socket socket;
-    private OutputStream os;
-    private InputStream is;
+    private final Socket socket;
 
     public ConnectionWrap(Socket s) {
         socket = s;
@@ -22,9 +20,9 @@ public class ConnectionWrap implements Runnable {
     public void run() {
         System.out.println("스레드풀 생성: " + Thread.currentThread().getName());
         try {
-            // 바이트 배열로 전송할 것이므로 필터 스트림 없이 Input/OutputStream만 사용해도 됨
-            os = socket.getOutputStream();
-            is = socket.getInputStream();
+            // 바이트 배열로 전송할 것이므로 필터 스트림 없이 Input/OutputStream 만 사용해도 됨
+            OutputStream os = socket.getOutputStream();
+            InputStream is = socket.getInputStream();
 
             boolean program_stop = false;
 
@@ -36,9 +34,9 @@ public class ConnectionWrap implements Runnable {
                 System.out.println("입력대기 종료");
                 int packetType = buf[0];            // 수신 데이터에서 패킷 타입 얻음
                 System.out.println(packetType);
-                protocol.setPacket(packetType, buf);    // 패킷 타입을 Protocol 객체의 packet 멤버변수에 buf를 복사
-                UserInfoManager uim = null;
-                NtrDataManager ndm = null;
+                protocol.setPacket(packetType, buf);    // 패킷 타입을 Protocol 객체의 packet 멤버변수에 buf 를 복사
+                UserInfoManager uim;
+                NtrDataManager ndm;
 
                 switch (packetType) {
                     case Protocol.PT_EXIT:            // 프로그램 종료 수신
@@ -105,7 +103,7 @@ public class ConnectionWrap implements Runnable {
                         break;
                     case Protocol.PT_RES_CHART_DATE:
                         System.out.println("클라이언트가 통계 표시 날짜를 보냈습니다");
-                        String date[] = protocol.getDate().split(",");
+                        String[] date = protocol.getDate().split(",");
                         int[] startDate = new int[]{Integer.parseInt(date[0]), Integer.parseInt(date[1]), Integer.parseInt(date[2])};
                         int[] endDate = new int[]{Integer.parseInt(date[3]), Integer.parseInt(date[4]), Integer.parseInt(date[5])};
                         ndm = new NtrDataManager();
@@ -135,9 +133,7 @@ public class ConnectionWrap implements Runnable {
 
         String id = info.split(",")[0];
         String pwd = info.split(",")[1];
-        if(!i.equals(id) || !p.equals(pwd)){ // id와 비밀번호가 불일치
-            return false;
-        }
-        return true;
+        // id와 비밀번호가 불일치
+        return i.equals(id) && p.equals(pwd);
     }
 }

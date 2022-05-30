@@ -4,14 +4,14 @@ import javax.swing.*;
 import java.time.LocalDate;
 
 public class UserData {
-    private String userName="";
-    private int sex =0;
-    private int age =0;
-    private int dailycalorie = 0;
-    private int dailyprotein =0;
-    private int calorielimit = 0;
+    private String userName;
+    private int sex;
+    private int age;
+    private int dailyCalorie = 0;
+    private int dailyProtein = 0;
+    private int calorieLimit = 0;
     private int carbohydrate = 130;
-    private int proteinlimit =0;
+    private int proteinLimit = 0;
 
     public  UserData (String n, int y, int s)
     {
@@ -24,37 +24,37 @@ public class UserData {
 
     public int GetCalorie()
     {
-        return this.calorielimit;
+        return this.calorieLimit;
     }
 
     public int GetProtein()
     {
-        return this.proteinlimit;
+        return this.proteinLimit;
     }
 
     public void addCalorie(int c)
     {
-        if(this.calorielimit> this.dailycalorie + c)
+        if(this.calorieLimit > this.dailyCalorie + c)
         {
             JFrame jFrame = new JFrame();
             JOptionPane.showMessageDialog(jFrame, "경고: 하루 권장 칼로리량을 초과합니다!");
         }
         else
         {
-           this.dailycalorie+=c;
+           this.dailyCalorie +=c;
         }
     }
 
     public void addProtein(int p)
     {
-        if(this.proteinlimit> this.dailycalorie + p)
+        if(this.proteinLimit > this.dailyCalorie + p)
         {
             JFrame jFrame = new JFrame();
             JOptionPane.showMessageDialog(jFrame, "경고: 하루 권장 단백질량을 초과합니다!");
         }
         else
         {
-            this.dailyprotein+=p;
+            this.dailyProtein +=p;
         }
     }
 
@@ -64,49 +64,49 @@ public class UserData {
         {
             if(a >= 75)
             {
-                calorielimit = 1900;
-                proteinlimit = 60;
+                calorieLimit = 1900;
+                proteinLimit = 60;
             }
             else if (a >= 65)
             {
-                calorielimit = 2000;
-                proteinlimit = 60;
+                calorieLimit = 2000;
+                proteinLimit = 60;
 
             }
             else if (a >= 50)
             {
-                calorielimit = 2200;
-                proteinlimit = 60;
+                calorieLimit = 2200;
+                proteinLimit = 60;
             }
             else if (a >= 30)
             {
-                calorielimit = 2500;
-                proteinlimit = 65;
+                calorieLimit = 2500;
+                proteinLimit = 65;
             }
             else if (a >= 19)
             {
-                calorielimit = 2600;
-                proteinlimit = 65;
+                calorieLimit = 2600;
+                proteinLimit = 65;
             }
             else if (a >= 15)
             {
-                calorielimit = 2700;
-                proteinlimit = 65;
+                calorieLimit = 2700;
+                proteinLimit = 65;
             }
             else if (a >= 12)
             {
-                calorielimit = 2500;
-                proteinlimit = 60;
+                calorieLimit = 2500;
+                proteinLimit = 60;
             }
             else if (a >= 9)
             {
-                calorielimit = 2000;
-                proteinlimit = 50;
+                calorieLimit = 2000;
+                proteinLimit = 50;
             }
             else if (a >= 6)
             {
-                calorielimit = 1700;
-                proteinlimit = 35;
+                calorieLimit = 1700;
+                proteinLimit = 35;
             }
             else
             {
@@ -118,48 +118,48 @@ public class UserData {
             if (a >= 75)
             {
 
-                calorielimit = 1500;
-                proteinlimit = 50;
+                calorieLimit = 1500;
+                proteinLimit = 50;
             }
             else if (a >= 65)
             {
-                calorielimit = 1600;
-                proteinlimit = 50;
+                calorieLimit = 1600;
+                proteinLimit = 50;
             }
             else if (a >= 50)
             {
-                calorielimit = 1700;
-                proteinlimit = 50;
+                calorieLimit = 1700;
+                proteinLimit = 50;
             }
             else if (a >= 30)
             {
-                calorielimit = 1900;
-                proteinlimit = 50;
+                calorieLimit = 1900;
+                proteinLimit = 50;
             }
             else if (a >= 19)
             {
-                calorielimit = 2000;
-                proteinlimit = 55;
+                calorieLimit = 2000;
+                proteinLimit = 55;
             }
             else if (a >= 15)
             {
-                calorielimit = 2000;
-                proteinlimit = 55;
+                calorieLimit = 2000;
+                proteinLimit = 55;
             }
             else if (a >= 12)
             {
-                calorielimit = 2000;
-                proteinlimit = 55;
+                calorieLimit = 2000;
+                proteinLimit = 55;
             }
             else if (a >= 9)
             {
-                calorielimit = 1800;
-                proteinlimit = 45;
+                calorieLimit = 1800;
+                proteinLimit = 45;
             }
             else if (a >= 6)
             {
-                calorielimit = 1500;
-                proteinlimit = 35;
+                calorieLimit = 1500;
+                proteinLimit = 35;
             }
             else
             {

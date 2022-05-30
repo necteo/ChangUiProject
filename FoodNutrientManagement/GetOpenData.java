@@ -139,9 +139,7 @@ public class GetOpenData {
 
             String s = String.format("%06d", n);
             String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=D"+s;
-            JSONObject temp= new JSONObject();
-            temp = recommend(urlBuilder);
-            return temp;
+            return recommend(urlBuilder);
         }
         return body;
     }
