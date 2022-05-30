@@ -347,6 +347,10 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         btnResult.addActionListener(new ActionListener() {  // 통계 차트 표시 버튼
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (!(chbCal.isSelected() || chbCarb.isSelected() || chbPro.isSelected() || chbFat.isSelected())) {
+                    JOptionPane.showMessageDialog(null, "하나 이상의 항목을 체크해야합니다.");
+                    return;
+                }
                 Thread cw = new Thread(new Runnable() {
                     @Override
                     public void run() {
