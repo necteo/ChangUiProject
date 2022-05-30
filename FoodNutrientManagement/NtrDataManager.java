@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class NtrDataManager {       // DB 일일_영양소 테이블의 입출력을 담당하는 클래스
     DBController db = new DBController();
 
-    public ArrayList<DailyNutrient> readData(int[] startDate, int[] endDate) {  // DB 에서 기간에 따라 데이터 읽어오는 함수
+    public ArrayList<DailyNutrient> readData(int[] startDate, int[] endDate) {  // DB 에서 기간에 따라 데이터 읽어오는 메소드
         ArrayList<DailyNutrient> dnList = new ArrayList<>();   // 저장 후 리턴용
 
         try {
@@ -39,7 +39,7 @@ public class NtrDataManager {       // DB 일일_영양소 테이블의 입출�
         return dnList;
     }
 
-    public void insertData(DailyNutrient dn) {  // DB 에 데이터 저장하는 클래스
+    public void insertData(DailyNutrient dn) {  // DB 에 데이터 저장하는 메소드
         try {
             db.dbConn();
             String sql = "insert into 일일_영양소 values (?, ?, ?, ?, ? ,?)";
