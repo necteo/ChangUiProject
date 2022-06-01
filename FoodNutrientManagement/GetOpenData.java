@@ -101,10 +101,11 @@ public class GetOpenData {
         return foodNtrInfoList;
     }
 
-    public static JSONObject recommend(String code) throws IOException, ParseException, ParserConfigurationException, SAXException {
+    public static FoodNutrient recommend(String food_cd) throws IOException, ParseException, ParserConfigurationException, SAXException {
         /*URL*/
 
-        URL url = new URL(code);
+        String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=" + food_cd;
+        URL url = new URL(urlBuilder);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-type", "application/json");
@@ -126,21 +127,31 @@ public class GetOpenData {
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObj = (JSONObject) jsonParser.parse(result);
         JSONObject body = (JSONObject) jsonObj.get("I2790");// response 로 부터 body 찾아오기
+        JSONArray row = (JSONArray) body.get("row");
+        JSONObject food = (JSONObject) row.get(0);
 
-        JSONObject msg = (JSONObject) body.get("RESULT");
-
-        String val = "";
-        String comp = (String) msg.get("MSG");
-        if(!comp.equals("정상처리되었습니다.")) {
-            Random ran = new Random();
-            int n;
-
-            n = ran.nextInt(189731);
-
-            String s = String.format("%06d", n);
-            String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=D"+s;
-            return recommend(urlBuilder);
+        FoodNutrient foodNtrInfo = new FoodNutrient();
+        foodNtrInfo.setName((String) food.get("DESC_KOR"));
+        if (food.get("NUTR_CONT1") == "") {
+            foodNtrInfo.setCalories(0);
+        } else {
+            foodNtrInfo.setCalories(Double.parseDouble((String) food.get("NUTR_CONT1")));
         }
-        return body;
+        if (food.get("NUTR_CONT2") == "") {
+            foodNtrInfo.setCarbohydrate(0);
+        } else {
+            foodNtrInfo.setCarbohydrate(Double.parseDouble((String) food.get("NUTR_CONT2")));
+        }
+        if (food.get("NUTR_CONT3") == "") {
+            foodNtrInfo.setProtein(0);
+        } else {
+            foodNtrInfo.setProtein(Double.parseDouble((String) food.get("NUTR_CONT3")));
+        }
+        if (food.get("NUTR_CONT4") == "") {
+            foodNtrInfo.setFat(0);
+        } else {
+            foodNtrInfo.setFat(Double.parseDouble((String) food.get("NUTR_CONT4")));
+        }
+        return foodNtrInfo;
     }
 }

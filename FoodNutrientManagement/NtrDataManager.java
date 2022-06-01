@@ -2,6 +2,7 @@ package FoodNutrientManagement;
 
 import SystemManagement.DBController;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -57,5 +58,23 @@ public class NtrDataManager {       // DB 일일_영양소 테이블의 입출�
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String getFoodCD(int n) {
+        db.dbConn();
+        String sql = "select food_cd from foods where id = ?";
+        String code = null;
+        try {
+            db.pst = db.conn.prepareStatement(sql);
+            db.pst.setInt(1, n);
+            db.rs = db.pst.executeQuery();
+            db.rs.next();
+            code = db.rs.getString("food_cd");
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            db.dbClose();
+        }
+        return code;
     }
 }

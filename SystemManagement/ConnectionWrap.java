@@ -1,13 +1,21 @@
 package SystemManagement;
 
 import FoodNutrientManagement.DailyNutrient;
+import FoodNutrientManagement.FoodNutrient;
+import FoodNutrientManagement.GetOpenData;
 import FoodNutrientManagement.NtrDataManager;
 import UserManagement.UserDTO;
 import UserManagement.UserInfoManager;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class ConnectionWrap implements Runnable {
     private final Socket socket;
@@ -43,7 +51,9 @@ public class ConnectionWrap implements Runnable {
                         protocol = new Protocol(Protocol.PT_EXIT);
                         os.write(protocol.getPacket());
                         program_stop = true;
-                        System.out.println("서버종료");
+                        uim = new UserInfoManager();
+                        uim.controlLoginState("wlgh0655", 1);
+                        System.out.println("클라이언트 종료");
                         break;
 
                     case Protocol.PT_RES_LOGIN:        // 로그인 정보 수신
@@ -94,9 +104,10 @@ public class ConnectionWrap implements Runnable {
                         os.write(protocol.getPacket());
                         break;
                     case Protocol.PT_RES_DAILY_NUTR:
+                        os.write('o');
                         ois = new ObjectInputStream(is);
-                        System.out.println("클라이언트가 영양소 정보를 보냈습니다");
                         DailyNutrient dn = (DailyNutrient) ois.readObject();
+                        System.out.println("클라이언트가 영양소 정보를 보냈습니다");
                         ndm = new NtrDataManager();
                         ndm.insertData(dn);
                         System.out.println("저장완료");
@@ -113,6 +124,19 @@ public class ConnectionWrap implements Runnable {
                         System.out.println("서버가 영양소 정보를 보냈습니다");
                         oos.flush();
                         break;
+                    case Protocol.PT_RECOMMEND_FOOD:
+                        System.out.println("클라이언트가 식품 추천을 요청했습니다");
+                        Random ran = new Random();
+                        int num = ran.nextInt(90608);
+
+                        ndm = new NtrDataManager();
+                        String food_cd = ndm.getFoodCD(num);
+                        FoodNutrient foodNtrInfo = GetOpenData.recommend(food_cd);
+                        oos = new ObjectOutputStream(os);
+                        oos.writeObject(foodNtrInfo);
+                        System.out.println("서버가 식품 정보를 보냈습니다");
+                        oos.flush();
+                        break;
                 }//end switch
                 if (program_stop) break;
 
@@ -121,7 +145,7 @@ public class ConnectionWrap implements Runnable {
             is.close();
             os.close();
             socket.close();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException | ParseException | ParserConfigurationException | SAXException e) {
             e.printStackTrace();
         }
     }

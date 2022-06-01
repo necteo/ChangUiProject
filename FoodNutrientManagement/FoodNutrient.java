@@ -1,11 +1,24 @@
 package FoodNutrientManagement;
 
-public class FoodNutrient {         // 공공데이터 API 에서 받아온 데이터를 저장하는 클래스
+import java.io.Serial;
+import java.io.Serializable;
+
+public class FoodNutrient implements Serializable {         // 공공데이터 API 에서 받아온 데이터를 저장하는 클래스
+    @Serial
+    private static final long serialVersionUID = 3L;
     private String name;            // 식품명
     private double calories;        // 열량
     private double carbohydrate;    // 탄수화물
     private double protein;         // 단백질
     private double fat;             // 지방
+
+    public FoodNutrient() {
+        name = "";
+        calories = 2200;
+        carbohydrate = 2200;
+        protein = 2200;
+        fat = 2200;
+    }
 
     public void setName(String name) { this.name = name; }
     public void setCalories(double calories) { this.calories = calories; }

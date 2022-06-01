@@ -13,10 +13,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -26,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Random;
+import java.util.Vector;
 
 public class FoodNtrView extends JFrame implements ActionListener {     // 식품명을 저장하는 화면으로 가장 메인이 되는 화면 클래스
     private JRadioButton radBreakfast;
@@ -33,6 +31,8 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
     private JRadioButton radDinner;
     private int time;
     private Client client;
+    private FoodNutrient foodNtr;
+    private DefaultListModel model;
 
     public static void main(String[] args) {   // 로그인 건너뛰고 테스트용
         EventQueue.invokeLater(new Runnable() {
@@ -67,6 +67,7 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         setVisible(true);
 
         client = c;
+        foodNtr = new FoodNutrient();
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -149,6 +150,7 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                             double fat = foodNtrInfoList.get(0).getFat();
                             DailyNutrient dn = new DailyNutrient(date, time, calories, carbohydrate, protein, fat);     // DB 일일_영양소 테이블 저장용 클래스
 
+                            client.is.read();
                             ObjectOutputStream oos = new ObjectOutputStream(client.os);
                             oos.writeObject(dn);
                             oos.flush();
@@ -166,46 +168,116 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
     }
 
     public void placeFoodRcmPanel(JPanel panel) {   // 식품 추천 받는 버튼이 있는 패널
+        JLabel lblFoods = new JLabel("추천 목록");
+        lblFoods.setBounds(15, 185, 80, 20);
+        panel.add(lblFoods);
+
+        model = new DefaultListModel();
+        JList foodList = new JList(model);
+        foodList.setBounds(75, 160, 180, 70);
+        JScrollPane scrollPane = new JScrollPane(foodList);
+        scrollPane.setBounds(75, 160, 180, 70);
+        panel.add(scrollPane);
+        foodList.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(e.getClickCount() == 2){
+                    String food = String.valueOf(foodList.getSelectedValue());
+                    Thread cw = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                ArrayList<FoodNutrient> foodNtrInfoList = GetOpenData.getData(food);  // 입력된 식품명으로 공공데이터 가져옴
+
+                                client.protocol = new Protocol(Protocol.PT_RES_DAILY_NUTR);
+                                System.out.println("영양소 정보 전송");
+                                client.os.write(client.protocol.getPacket());
+
+                                String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                                double calories = foodNtrInfoList.get(0).getCalories();   // 리스트의 첫번째 값으로 저장
+                                double carbohydrate = foodNtrInfoList.get(0).getCarbohydrate();
+                                double protein =  foodNtrInfoList.get(0).getProtein();
+                                double fat = foodNtrInfoList.get(0).getFat();
+                                DailyNutrient dn = new DailyNutrient(date, time, calories, carbohydrate, protein, fat);     // DB 일일_영양소 테이블 저장용 클래스
+
+                                client.is.read();
+                                ObjectOutputStream oos = new ObjectOutputStream(client.os);
+                                oos.writeObject(dn);
+                                oos.flush();
+                            } catch (IOException | ParseException ex) {
+                                throw new RuntimeException(ex);
+                            } catch (NullPointerException ex) {
+                                JOptionPane.showMessageDialog(null, "식품 정보가 없습니다.");
+                            }
+                        }
+                    });
+
+                    cw.start();
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+            @Override
+            public void mouseExited(MouseEvent e) {}
+        });
+
         JButton btnFoodRecommend = new JButton("식품 추천");
-        btnFoodRecommend.setBounds(40, 160, 350, 70);
+        btnFoodRecommend.setBounds(290, 160, 120, 70);
         panel.add(btnFoodRecommend);
         btnFoodRecommend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // 식품 추천 화면 출력
-                Random ran = new Random();
-                int n;
-
-                  n = ran.nextInt(189731);
-
-                String s = String.format("%06d", n);
-                String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=D"+s;
-                JSONArray jsonArray = new JSONArray();
-                for(int i=0; i<2; i++) {
-                    try {
-                        jsonArray.add(GetOpenData.recommend(urlBuilder));
-                    } catch (IOException | SAXException | ParserConfigurationException | ParseException ex) {
-                        throw new RuntimeException(ex);
+                Thread cw = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            client.protocol = new Protocol(Protocol.PT_RECOMMEND_FOOD);
+                            client.os.write(client.protocol.getPacket());
+                            System.out.println("식품 추천 요청");
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
+                });
+
+                Thread cr = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        synchronized (foodNtr) {
+                            try {
+                                ObjectInputStream ois = new ObjectInputStream(client.is);
+                                foodNtr = (FoodNutrient) ois.readObject();
+                                System.out.println("식품 정보를 받음");
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            } catch (ClassNotFoundException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    }
+                });
+
+//                while (true) {
+//                    synchronized (foodNtr) {
+//                        if (foodNtr.getCalories() < 800)
+//                            break;
+                        cw.start();
+                        cr.start();
+//                    }
+//                }
+
+                try {
+                    cr.join();
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
                 }
-                String[] list = new String[2];
-                JSONObject element;
-                JSONArray row;
-                JSONObject name;
-                String val;
-                for(int i = 0; i < 2 ; i++)
-                {
-                    element = (JSONObject) jsonArray.get(i);
-                    row = (JSONArray) element.get("row");
-                    name = (JSONObject) row.get(0);
-                    val = (String) name.get("DESC_KOR");
-                    list[i] = val;
-                }
-                /*JFrame jFrame = new JFrame();
-                JComboBox<String> FoodList = new JComboBox<>(list);
-                jFrame.add(FoodList);
-                jFrame.setSize(300,300);
-                jFrame.setVisible(true);*/
+                model.addElement(foodNtr.getName());
             }
         });
     }

@@ -13,6 +13,7 @@ public class Protocol implements Serializable {
     public static final int PT_RES_DAILY_NUTR = 5; // 먹은 영양소 데이터 전송
     public static final int PT_RES_CHART_DATE = 6;  // 통계 차트 표시 날짜 전송
     public static final int PT_CHART_DATA_RESULT = 7;   // 통계 차트 표시 데이터 결과
+    public static final int PT_RECOMMEND_FOOD = 8;
 
     public static final int LEN_LOGIN_ID = 10;	// ID 길이
     public static final int LEN_LOGIN_PASSWORD = 20;	// PWD 길이
@@ -40,7 +41,7 @@ public class Protocol implements Serializable {
                 case PT_RES_LOGIN -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_LOGIN_PASSWORD];
                 case PT_UNDEFINED -> packet = new byte[LEN_MAX];
                 case PT_LOGIN_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_RESULT];
-                case PT_RES_SIGN_UP, PT_CHART_DATA_RESULT, PT_RES_DAILY_NUTR, PT_EXIT ->
+                case PT_RES_SIGN_UP, PT_CHART_DATA_RESULT, PT_RES_DAILY_NUTR, PT_RECOMMEND_FOOD, PT_EXIT ->
                         packet = new byte[LEN_PROTOCOL_TYPE];
                 case PT_SIGN_UP_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_SIGN_UP_RESULT];
                 case PT_RES_CHART_DATE -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_CHART_DATE];
