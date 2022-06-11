@@ -11,15 +11,21 @@ public class Protocol implements Serializable {
     public static final int PT_RES_SIGN_UP = 3;     // 회원가입 정보 전송
     public static final int PT_SIGN_UP_RESULT = 4;  // 회원가입 결과
     public static final int PT_RES_DAILY_NUTR = 5; // 먹은 영양소 데이터 전송
-    public static final int PT_RES_CHART_DATE = 6;  // 통계 차트 표시 날짜 전송
-    public static final int PT_CHART_DATA_RESULT = 7;   // 통계 차트 표시 데이터 결과
-    public static final int PT_RECOMMEND_FOOD = 8;
+    public static final int PT_DAILY_NUTR_RESULT = 6;   // 먹은 영양소 데이터 저장 결과
+    public static final int PT_RES_CHART_DATE = 7;  // 통계 차트 표시 날짜 전송
+    public static final int PT_CHART_DATA_RESULT = 8;   // 통계 차트 표시 데이터 결과
+    public static final int PT_RECOMMEND_FOOD = 9;  // 추천 식품 요청
+    public static final int PT_REQ_FOOD_CD = 10;    // 식품코드 요청
+    public static final int PT_FOOD_CD_RESULT = 11; // 식품코드 결과
 
     public static final int LEN_LOGIN_ID = 10;	// ID 길이
     public static final int LEN_LOGIN_PASSWORD = 20;	// PWD 길이
     public static final int LEN_LOGIN_RESULT = 2;	// 로그인 인증 값 길이
     public static final int LEN_SIGN_UP_RESULT = 2; // 회원가입 결과 값 길이
+    public static final int LEN_RECOMMEND_NUM = 2;    // 추천 식품 개수 길이
     public static final int LEN_CHART_DATE = 20;    // 통계 차트 표시 날짜 길이
+    public static final int LEN_FOOD_NAME = 100;    // 식품 이름 길이
+    public static final int LEN_FOOD_CD = 100;  // 식품 코드 길이
     public static final int LEN_PROTOCOL_TYPE = 1;	// 프로토콜 타입 길이
     public static final int LEN_MAX = 1000;		//최대 데이터 길이
     protected int protocolType;
@@ -36,15 +42,18 @@ public class Protocol implements Serializable {
 
     // 프로토콜 타입에 따라 바이트 배열 packet 의 length 가 다름
     public byte[] getPacket(int protocolType) {
-        if(packet==null){
+        if (packet == null) {
             switch (protocolType) {
                 case PT_RES_LOGIN -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_LOGIN_PASSWORD];
                 case PT_UNDEFINED -> packet = new byte[LEN_MAX];
                 case PT_LOGIN_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_RESULT];
-                case PT_RES_SIGN_UP, PT_CHART_DATA_RESULT, PT_RES_DAILY_NUTR, PT_RECOMMEND_FOOD, PT_EXIT ->
+                case PT_RES_SIGN_UP, PT_CHART_DATA_RESULT, PT_RES_DAILY_NUTR, PT_DAILY_NUTR_RESULT, PT_EXIT ->
                         packet = new byte[LEN_PROTOCOL_TYPE];
                 case PT_SIGN_UP_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_SIGN_UP_RESULT];
-                case PT_RES_CHART_DATE -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_CHART_DATE];
+                case PT_RECOMMEND_FOOD -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_RECOMMEND_NUM];
+                case PT_RES_CHART_DATE -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_CHART_DATE];
+                case PT_REQ_FOOD_CD -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_FOOD_NAME];
+                case PT_FOOD_CD_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_FOOD_CD];
             } // end switch
         } // end if
         packet[0] = (byte)protocolType;	// packet 바이트 배열의 첫 번째 바이트에 프로토콜 타입 설정
@@ -106,21 +115,48 @@ public class Protocol implements Serializable {
 
     // 패스워드는 byte[]에서 로그인 아이디 바로 뒤에 있음
     public String getPassword() {
-        return new String(packet, LEN_PROTOCOL_TYPE+LEN_LOGIN_ID, LEN_LOGIN_PASSWORD).trim();
+        return new String(packet, LEN_PROTOCOL_TYPE + LEN_LOGIN_ID, LEN_LOGIN_PASSWORD).trim();
     }
 
     public void setPassword(String password) {
-        System.arraycopy(password.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE+LEN_LOGIN_ID, password.trim().getBytes().length);
-        packet[LEN_PROTOCOL_TYPE+LEN_LOGIN_ID + password.trim().getBytes().length] = '\0';
+        System.arraycopy(password.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE + LEN_LOGIN_ID, password.trim().getBytes().length);
+        packet[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + password.trim().getBytes().length] = '\0';
+    }
+
+    public String getRcmNum() {
+        return new String(packet, LEN_PROTOCOL_TYPE + LEN_LOGIN_ID, LEN_RECOMMEND_NUM).trim();
+    }
+
+    public void setRcmNum(String n) {
+        System.arraycopy(n.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE + LEN_LOGIN_ID, n.trim().getBytes().length);
+        packet[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + n.trim().getBytes().length] = '\0';
     }
 
     public String getDate() {
-        return new String(packet, LEN_PROTOCOL_TYPE, LEN_CHART_DATE).trim();
+        return new String(packet, LEN_PROTOCOL_TYPE + LEN_LOGIN_ID, LEN_CHART_DATE).trim();
     }
 
     public void setDate(String[] startDate, String[] endDate) {
         String date = startDate[0] + "," + startDate[1] + "," + startDate[2] + "," + endDate[0] + "," + endDate[1] + "," + endDate[2];
-        System.arraycopy(date.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE, date.trim().getBytes().length);
-        packet[LEN_PROTOCOL_TYPE + date.trim().getBytes().length] = '\0';
+        System.arraycopy(date.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE + LEN_LOGIN_ID, date.trim().getBytes().length);
+        packet[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + date.trim().getBytes().length] = '\0';
+    }
+
+    public String getFoodName() {
+        return new String(packet, LEN_PROTOCOL_TYPE, LEN_FOOD_NAME).trim();
+    }
+
+    public void setFoodName(String name) {
+        System.arraycopy(name.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE, name.trim().getBytes().length);
+        packet[LEN_PROTOCOL_TYPE + name.trim().getBytes().length] = '\0';
+    }
+
+    public String getFoodCd() {
+        return new String(packet, LEN_PROTOCOL_TYPE, LEN_FOOD_CD).trim();
+    }
+
+    public void setFoodCd(String code) {
+        System.arraycopy(code.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE, code.trim().getBytes().length);
+        packet[LEN_PROTOCOL_TYPE + code.trim().getBytes().length] = '\0';
     }
 }

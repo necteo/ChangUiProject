@@ -66,24 +66,27 @@ public class UserInfoManager {  // DB user_info 테이블의 입출력을 담당
         return isDup;
     }
 
-    public void controlLoginState(String id, int state) {
+    public UserDTO select(String id) {
+        UserDTO userDTO = null;
         try {
             db.dbConn();
-            if (state == 0) {
-                String sql = "insert into login_state values (?)";
-                db.pst = db.conn.prepareStatement(sql);
-                db.pst.setString(1, id);
-                db.pst.executeUpdate();
-            } else if (state == 1) {
-                String sql = "delete from login_state where id=?";
-                db.pst = db.conn.prepareStatement(sql);
-                db.pst.setString(1, id);
-                db.pst.executeUpdate();
+            String sql = "select * from user_info where id=?";
+            db.pst = db.conn.prepareStatement(sql);
+            db.pst.setString(1, id);
+            db.rs = db.pst.executeQuery();
+            if (db.rs.next()) {
+                userDTO = new UserDTO(db.rs.getString("id"),
+                                    db.rs.getString("password"),
+                                    db.rs.getString("name"),
+                                    db.rs.getInt("year"),
+                                    db.rs.getInt("sex"));
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             db.dbClose();
         }
+
+        return userDTO;
     }
 }

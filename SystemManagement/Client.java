@@ -11,7 +11,7 @@ public class Client {
     public byte[] buf;
 
     public void conn() throws IOException {
-        socket = new Socket("", 8000);
+        socket = new Socket("localhost", 8000);
         os = socket.getOutputStream();
         is = socket.getInputStream();
         protocol = new Protocol();

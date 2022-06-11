@@ -3,15 +3,11 @@ package FoodNutrientManagement;
 import SystemManagement.Client;
 import SystemManagement.Protocol;
 import UserManagement.UserInfoManager;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-import org.xml.sax.SAXException;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -20,19 +16,19 @@ import java.io.ObjectOutputStream;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Random;
-import java.util.Vector;
+import java.util.*;
 
 public class FoodNtrView extends JFrame implements ActionListener {     // 식품명을 저장하는 화면으로 가장 메인이 되는 화면 클래스
     private JRadioButton radBreakfast;
     private JRadioButton radLunch;
     private JRadioButton radDinner;
-    private int time;
+    private int time = 0;
     private Client client;
-    private FoodNutrient foodNtr;
+    private ArrayList<FoodNutrient> foodNtrList;
     private DefaultListModel model;
+    private JRadioButton radDaily;
+    private JRadioButton radTime;
+    private int chartMode = 0;
 
     public static void main(String[] args) {   // 로그인 건너뛰고 테스트용
         EventQueue.invokeLater(new Runnable() {
@@ -44,35 +40,34 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
     }
     public FoodNtrView(Client c, String id) {      // 생성자에서 기본 화면 생성돼
         setTitle("식품 영양소 관리");
-        setBounds(500, 300, 450, 460);
+        setBounds(500, 300, 450, 490);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
         JPanel panel = new JPanel();
-        placeFoodNtrPanel(panel);
+        placeFoodNtrPanel(panel, id);
 
         JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
         separator.setBounds(15, 130, 400, 1);
         panel.add(separator);
 
-        placeFoodRcmPanel(panel);
+        placeFoodRcmPanel(panel, id);
 
         JSeparator separator1 = new JSeparator(JSeparator.HORIZONTAL);
         separator1.setBounds(15, 260, 400, 1);
         panel.add(separator1);
 
-        placeChartPanel(panel);
+        placeChartPanel(panel, id);
 
         add(panel);
         setVisible(true);
 
         client = c;
-        foodNtr = new FoodNutrient();
+        foodNtrList = new ArrayList<>();
 
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                new UserInfoManager().controlLoginState(id, 1);
                 try {
                     client.protocol = new Protocol(Protocol.PT_EXIT);
                     client.os.write(client.protocol.getPacket());
@@ -85,18 +80,14 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         });
     }
 
-    public void placeFoodNtrPanel(JPanel panel) {   // 식품명을 입력받는 패널
-        panel.setBounds(0, 0, 450, 300);
+    public void placeFoodNtrPanel(JPanel panel, String id) {   // 식품명을 입력받는 패널
+        panel.setBounds(0, 0, 450, 490);
         getContentPane().add(panel);
         panel.setLayout(null);
 
         JLabel lblFood = new JLabel("식품명");
         lblFood.setBounds(15, 30, 40, 20);
         panel.add(lblFood);
-
-//        JTextField txtFood = new JTextField();
-//        txtFood.setBounds(75, 30, 180, 20);
-//        panel.add(txtFood);
 
         AutoSuggest txtAutoSuggest = new AutoSuggest();
         txtAutoSuggest.setBounds(75, 30, 180, 20);
@@ -111,6 +102,7 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         radBreakfast.setBounds(75, 80, 50, 20);
         bgTime.add(radBreakfast);
         panel.add(radBreakfast);
+        radBreakfast.setSelected(true);
         radBreakfast.addActionListener(this);
 
         radLunch = new JRadioButton("점심");
@@ -137,23 +129,43 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                     @Override
                     public void run() {
                         try {
-                            ArrayList<FoodNutrient> foodNtrInfoList = GetOpenData.getData(txtAutoSuggest.getText());  // 입력된 식품명으로 공공데이터 가져옴
+                            client.protocol = new Protocol(Protocol.PT_REQ_FOOD_CD);
+                            System.out.println("식품코드 요청");
+                            client.protocol.setFoodName(txtAutoSuggest.getText());
+                            client.os.write(client.protocol.getPacket());
+
+                            client.protocol = new Protocol();
+                            client.buf = client.protocol.getPacket();
+                            client.is.read(client.buf);
+                            client.protocol.setPacket(client.buf[0], client.buf);
+                            String food_cd = client.protocol.getFoodCd();
+                            FoodNutrient foodNtrInfo = GetOpenData.getDataByCode(food_cd);  // 입력된 식품명으로 공공데이터 가져옴
 
                             client.protocol = new Protocol(Protocol.PT_RES_DAILY_NUTR);
                             System.out.println("영양소 정보 전송");
                             client.os.write(client.protocol.getPacket());
 
                             String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                            double calories = foodNtrInfoList.get(0).getCalories();   // 리스트의 첫번째 값으로 저장
-                            double carbohydrate = foodNtrInfoList.get(0).getCarbohydrate();
-                            double protein =  foodNtrInfoList.get(0).getProtein();
-                            double fat = foodNtrInfoList.get(0).getFat();
-                            DailyNutrient dn = new DailyNutrient(date, time, calories, carbohydrate, protein, fat);     // DB 일일_영양소 테이블 저장용 클래스
+                            double calories = foodNtrInfo.getCalories();   // 리스트의 첫번째 값으로 저장
+                            double carbohydrate = foodNtrInfo.getCarbohydrate();
+                            double protein =  foodNtrInfo.getProtein();
+                            double fat = foodNtrInfo.getFat();
+                            DailyNutrient dn = new DailyNutrient(date, time, calories, carbohydrate, protein, fat, id);     // DB 일일_영양소 테이블 저장용 클래스
 
                             client.is.read();
                             ObjectOutputStream oos = new ObjectOutputStream(client.os);
                             oos.writeObject(dn);
                             oos.flush();
+
+                            client.protocol = new Protocol();
+                            client.buf = client.protocol.getPacket();
+                            client.is.read(client.buf);
+                            int packetType = client.buf[0];
+                            client.protocol.setPacket(packetType, client.buf);
+                            if (packetType == Protocol.PT_DAILY_NUTR_RESULT)
+                                JOptionPane.showMessageDialog(null, "영양소 정보 저장 완료");
+                            else
+                                JOptionPane.showMessageDialog(null, "저장 실패");
                         } catch (IOException | ParseException ex) {
                             throw new RuntimeException(ex);
                         } catch (NullPointerException ex) {
@@ -167,7 +179,7 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         });
     }
 
-    public void placeFoodRcmPanel(JPanel panel) {   // 식품 추천 받는 버튼이 있는 패널
+    public void placeFoodRcmPanel(JPanel panel, String id) {   // 식품 추천 받는 버튼이 있는 패널
         JLabel lblFoods = new JLabel("추천 목록");
         lblFoods.setBounds(15, 185, 80, 20);
         panel.add(lblFoods);
@@ -187,27 +199,56 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                         @Override
                         public void run() {
                             try {
-                                ArrayList<FoodNutrient> foodNtrInfoList = GetOpenData.getData(food);  // 입력된 식품명으로 공공데이터 가져옴
+                                client.protocol = new Protocol(Protocol.PT_REQ_FOOD_CD);
+                                System.out.println("식품코드 요청");
+                                client.protocol.setFoodName(food);
+                                client.os.write(client.protocol.getPacket());
+
+                                client.protocol = new Protocol();
+                                client.buf = client.protocol.getPacket();
+                                client.is.read(client.buf);
+                                client.protocol.setPacket(client.buf[0], client.buf);
+                                String food_cd = client.protocol.getFoodCd();
+                                FoodNutrient foodNtrInfo = GetOpenData.getDataByCode(food_cd);  // 입력된 식품명으로 공공데이터 가져옴
 
                                 client.protocol = new Protocol(Protocol.PT_RES_DAILY_NUTR);
                                 System.out.println("영양소 정보 전송");
                                 client.os.write(client.protocol.getPacket());
 
                                 String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                                double calories = foodNtrInfoList.get(0).getCalories();   // 리스트의 첫번째 값으로 저장
-                                double carbohydrate = foodNtrInfoList.get(0).getCarbohydrate();
-                                double protein =  foodNtrInfoList.get(0).getProtein();
-                                double fat = foodNtrInfoList.get(0).getFat();
-                                DailyNutrient dn = new DailyNutrient(date, time, calories, carbohydrate, protein, fat);     // DB 일일_영양소 테이블 저장용 클래스
+                                double calories = foodNtrInfo.getCalories();   // 리스트의 첫번째 값으로 저장
+                                double carbohydrate = foodNtrInfo.getCarbohydrate();
+                                double protein =  foodNtrInfo.getProtein();
+                                double fat = foodNtrInfo.getFat();
+                                DailyNutrient dn = new DailyNutrient(date, time, calories, carbohydrate, protein, fat, id);     // DB 일일_영양소 테이블 저장용 클래스
 
                                 client.is.read();
                                 ObjectOutputStream oos = new ObjectOutputStream(client.os);
                                 oos.writeObject(dn);
                                 oos.flush();
+
+                                client.protocol = new Protocol();
+                                client.buf = client.protocol.getPacket();
+                                client.is.read(client.buf);
+                                int packetType = client.buf[0];
+                                client.protocol.setPacket(packetType, client.buf);
+                                if (packetType == Protocol.PT_DAILY_NUTR_RESULT)
+                                    JOptionPane.showMessageDialog(null, "영양소 정보 저장 완료");
+                                else
+                                    JOptionPane.showMessageDialog(null, "저장 실패");
                             } catch (IOException | ParseException ex) {
                                 throw new RuntimeException(ex);
                             } catch (NullPointerException ex) {
                                 JOptionPane.showMessageDialog(null, "식품 정보가 없습니다.");
+                                try {
+                                    client.is.read();
+                                    ObjectOutputStream oos = new ObjectOutputStream(client.os);
+                                    oos.writeObject(null);
+                                    oos.flush();
+                                    client.is.read();   // 쓰레기 값 처리
+                                } catch (IOException exc) {
+                                    throw new RuntimeException(exc);
+                                }
                             }
                         }
                     });
@@ -226,8 +267,16 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
             public void mouseExited(MouseEvent e) {}
         });
 
+        Vector<Integer> rcmNum = new Vector<Integer>();
+        for (int i = 1; i <= 10; i++) {
+            rcmNum.add(i);
+        }
+        JComboBox cbxRcmNum = new JComboBox(new DefaultComboBoxModel(rcmNum));
+        cbxRcmNum.setBounds(290, 210, 120, 20);
+        panel.add(cbxRcmNum);
+
         JButton btnFoodRecommend = new JButton("식품 추천");
-        btnFoodRecommend.setBounds(290, 160, 120, 70);
+        btnFoodRecommend.setBounds(290, 160, 120, 40);
         panel.add(btnFoodRecommend);
         btnFoodRecommend.addActionListener(new ActionListener() {
             @Override
@@ -238,6 +287,8 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                     public void run() {
                         try {
                             client.protocol = new Protocol(Protocol.PT_RECOMMEND_FOOD);
+                            client.protocol.setId(id);
+                            client.protocol.setRcmNum(String.valueOf(cbxRcmNum.getSelectedItem()));
                             client.os.write(client.protocol.getPacket());
                             System.out.println("식품 추천 요청");
                         } catch (IOException ex) {
@@ -249,10 +300,10 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                 Thread cr = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        synchronized (foodNtr) {
+                        synchronized (foodNtrList) {
                             try {
                                 ObjectInputStream ois = new ObjectInputStream(client.is);
-                                foodNtr = (FoodNutrient) ois.readObject();
+                                foodNtrList = (ArrayList<FoodNutrient>) ois.readObject();
                                 System.out.println("식품 정보를 받음");
                             } catch (IOException ex) {
                                 ex.printStackTrace();
@@ -277,12 +328,14 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
                 }
-                model.addElement(foodNtr.getName());
+                for (FoodNutrient foodNtr: foodNtrList) {
+                    model.addElement(foodNtr.getName());
+                }
             }
         });
     }
 
-    public void placeChartPanel(JPanel panel) {     // 차트 출력을 위한 기간을 입력받는 패널
+    public void placeChartPanel(JPanel panel, String id) {     // 차트 출력을 위한 기간을 입력받는 패널
         JLabel lblTerm = new JLabel("기간");
         lblTerm.setBounds(15, 295, 40, 20);
         panel.add(lblTerm);
@@ -410,6 +463,24 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         chbFat.setBounds(360, 375, 60, 20);
         panel.add(chbFat);
 
+        JLabel lblChartMode = new JLabel("통계 차트 유형");
+        lblChartMode.setBounds(18, 415, 100, 20);
+        panel.add(lblChartMode);
+
+        ButtonGroup bgChartMode = new ButtonGroup();
+        radDaily = new JRadioButton("날짜별");
+        radDaily.setBounds(130, 415, 70, 20);
+        bgChartMode.add(radDaily);
+        panel.add(radDaily);
+        radDaily.setSelected(true);
+        radDaily.addActionListener(this);
+
+        radTime = new JRadioButton("시간대별");
+        radTime.setBounds(245, 415, 90, 20);
+        bgChartMode.add(radTime);
+        panel.add(radTime);
+        radTime.addActionListener(this);
+
         btnResult.addActionListener(new ActionListener() {  // 통계 차트 표시 버튼
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -430,6 +501,7 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                             String _year = spnEndYear.getValue().toString().substring(24);
                             String _month = String.valueOf(spnEndMonth.getValue());
                             String _day = String.valueOf(spnEndDay.getValue());          // 조건으로 준 기간에 따라 DB 에서 읽어온 데이터를 List 로 저장
+                            client.protocol.setId(id);
                             client.protocol.setDate(new String[]{year, month, day}, new String[]{_year, _month, _day});
                             client.os.write(client.protocol.getPacket());
                         } catch (IOException ex) {
@@ -445,13 +517,16 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                             ObjectInputStream ois = new ObjectInputStream(client.is);
                             ArrayList<DailyNutrient> dnList = (ArrayList<DailyNutrient>) ois.readObject();
                             System.out.println("영양소 정보를 받음");
+                            client.os.write('o');
+                            LimitNutrient limitNtr = (LimitNutrient) ois.readObject();
+                            System.out.println("영양소 권장치 정보를 받음");
 
                             boolean[] isNtrsChecked = new boolean[]{
                                     chbCal.isSelected(),
                                     chbCarb.isSelected(),
                                     chbPro.isSelected(),
                                     chbFat.isSelected()};
-                            new NtrChartView(dnList, isNtrsChecked);    // 차트 화면 출력
+                            new NtrChartView(dnList, isNtrsChecked, chartMode, limitNtr);    // 차트 화면 출력
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         } catch (ClassNotFoundException ex) {
@@ -475,5 +550,9 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
             time = 1;
         else if (s.equals(radDinner.getText()))
             time = 2;
+        if (s.equals(radDaily.getText()))
+            chartMode = 0;
+        else if (s.equals(radTime.getText()))
+            chartMode = 1;
     }
 }

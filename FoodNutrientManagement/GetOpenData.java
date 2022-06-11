@@ -15,21 +15,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class GetOpenData {
-    public static void main(String[] args) {    // 테스트용
-        try {
-            ArrayList<FoodNutrient> fnList = getData("떡");
-            for (FoodNutrient fn: fnList) {
-                System.out.println(fn.getName() + " " + fn.getCalories() + " " + fn.getCarbohydrate() + " " + fn.getProtein());
-            }
-        } catch (IOException | ParseException e) {
-            throw new RuntimeException(e);
-        } catch (NullPointerException e) {
-            System.out.println("결과없음");
-        }
-    }
     public static ArrayList<FoodNutrient> getData(String foodName) throws IOException, ParseException {
         /*URL*/
         String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api" +
@@ -39,13 +26,49 @@ public class GetOpenData {
                 "/" + URLEncoder.encode("1", StandardCharsets.UTF_8) + /*요청시작위치*/
                 "/" + URLEncoder.encode("8", StandardCharsets.UTF_8) + /*요청종료위치*/
                 "/" + URLEncoder.encode("DESC_KOR", StandardCharsets.UTF_8) +
-                "=" + URLEncoder.encode(foodName, StandardCharsets.UTF_8); /*식품이름*/
+                "=" + URLEncoder.encode(foodName, StandardCharsets.UTF_8).replaceAll("\\+", "%20"); /*식품이름*/
         URL url = new URL(urlBuilder);
         System.out.println(url);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-type", "application/json");
         System.out.println("Response Msg: " + conn.getResponseMessage() + "Response code: " + conn.getResponseCode());
+
+        return fatchData(conn);
+    }
+
+    public static FoodNutrient getDataByCode(String food_cd) throws IOException, ParseException {
+        /*URL*/
+        String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=" + food_cd;
+        URL url = new URL(urlBuilder);
+        System.out.println(url);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Content-type", "application/json");
+        System.out.println("Response Msg: " + conn.getResponseMessage() + "Response code: " + conn.getResponseCode());
+
+        return fatchData(conn).get(0);
+    }
+
+    public static FoodNutrient recommend(String food_cd, ArrayList<DailyNutrient> dnList, LimitNutrient limitNtr)
+            throws IOException, ParseException, ParserConfigurationException, SAXException {
+        /*URL*/
+        String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=" + food_cd;
+        URL url = new URL(urlBuilder);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Content-type", "application/json");
+
+        FoodNutrient fn = fatchData(conn).get(0);
+
+        if (chkLimit(fn, dnList, limitNtr)) {
+            return null;
+        } else {
+            return fn;
+        }
+    }
+
+    private static ArrayList<FoodNutrient> fatchData(HttpURLConnection conn) throws IOException, ParseException {
         BufferedReader rd;
         if (conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
             rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -101,57 +124,29 @@ public class GetOpenData {
         return foodNtrInfoList;
     }
 
-    public static FoodNutrient recommend(String food_cd) throws IOException, ParseException, ParserConfigurationException, SAXException {
-        /*URL*/
-
-        String urlBuilder = "http://openapi.foodsafetykorea.go.kr/api/54746e590a1e4427a624/I2790/json/1/1/FOOD_CD=" + food_cd;
-        URL url = new URL(urlBuilder);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.setRequestProperty("Content-type", "application/json");
-        BufferedReader rd;
-        if (conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
-            rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        } else {
-            rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+    private static boolean chkLimit(FoodNutrient fn, ArrayList<DailyNutrient> dnList, LimitNutrient limitNtr) {
+        double sumCalories = fn.getCalories();
+        double sumCarb = fn.getCarbohydrate();
+        double sumProtein = fn.getProtein();
+        for (DailyNutrient dn : dnList) {
+            sumCalories += dn.getCalories();
+            sumCarb += dn.getCarbohydrate();
+            sumProtein += dn.getProtein();
+        }
+        if (sumCalories <= limitNtr.getCalorieLimit() * 2 / 3 || limitNtr.getCalorieLimit() * 0.97 <= sumCalories &&
+                sumCalories <= limitNtr.getCalorieLimit()) {
+            System.out.println("calorie");
+            if (sumCarb <= limitNtr.getCarbLimit() * 2 / 3 || limitNtr.getCarbLimit() * 0.97 <= sumCarb &&
+                    sumCarb <= limitNtr.getCarbLimit()) {
+                System.out.println("carbohydrate");
+                if (sumProtein <= limitNtr.getProteinLimit() * 2 / 3 || limitNtr.getProteinLimit() * 0.97 <= sumProtein &&
+                        sumProtein <= limitNtr.getProteinLimit()) {
+                    System.out.println("protein");
+                    return false;
+                }
+            }
         }
 
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = rd.readLine()) != null) {
-            sb.append(line);
-        }
-        rd.close();
-        conn.disconnect();
-        String result = sb.toString();
-        JSONParser jsonParser = new JSONParser();
-        JSONObject jsonObj = (JSONObject) jsonParser.parse(result);
-        JSONObject body = (JSONObject) jsonObj.get("I2790");// response 로 부터 body 찾아오기
-        JSONArray row = (JSONArray) body.get("row");
-        JSONObject food = (JSONObject) row.get(0);
-
-        FoodNutrient foodNtrInfo = new FoodNutrient();
-        foodNtrInfo.setName((String) food.get("DESC_KOR"));
-        if (food.get("NUTR_CONT1") == "") {
-            foodNtrInfo.setCalories(0);
-        } else {
-            foodNtrInfo.setCalories(Double.parseDouble((String) food.get("NUTR_CONT1")));
-        }
-        if (food.get("NUTR_CONT2") == "") {
-            foodNtrInfo.setCarbohydrate(0);
-        } else {
-            foodNtrInfo.setCarbohydrate(Double.parseDouble((String) food.get("NUTR_CONT2")));
-        }
-        if (food.get("NUTR_CONT3") == "") {
-            foodNtrInfo.setProtein(0);
-        } else {
-            foodNtrInfo.setProtein(Double.parseDouble((String) food.get("NUTR_CONT3")));
-        }
-        if (food.get("NUTR_CONT4") == "") {
-            foodNtrInfo.setFat(0);
-        } else {
-            foodNtrInfo.setFat(Double.parseDouble((String) food.get("NUTR_CONT4")));
-        }
-        return foodNtrInfo;
+        return true;
     }
 }

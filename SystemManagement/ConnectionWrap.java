@@ -1,9 +1,6 @@
 package SystemManagement;
 
-import FoodNutrientManagement.DailyNutrient;
-import FoodNutrientManagement.FoodNutrient;
-import FoodNutrientManagement.GetOpenData;
-import FoodNutrientManagement.NtrDataManager;
+import FoodNutrientManagement.*;
 import UserManagement.UserDTO;
 import UserManagement.UserInfoManager;
 import org.json.simple.JSONArray;
@@ -14,6 +11,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.Socket;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -52,7 +50,6 @@ public class ConnectionWrap implements Runnable {
                         os.write(protocol.getPacket());
                         program_stop = true;
                         uim = new UserInfoManager();
-                        uim.controlLoginState("wlgh0655", 1);
                         System.out.println("클라이언트 종료");
                         break;
 
@@ -66,7 +63,6 @@ public class ConnectionWrap implements Runnable {
                         String info = uim.getInfo(id, password);
 
                         if (isLoginValid(info, id, password)) {
-                            uim.controlLoginState(id, 0);  // 로그인 상태가 아님
                             protocol = new Protocol(Protocol.PT_LOGIN_RESULT);
                             protocol.setLoginResult("1");
                             System.out.println("로그인 성공");
@@ -111,31 +107,68 @@ public class ConnectionWrap implements Runnable {
                         ndm = new NtrDataManager();
                         ndm.insertData(dn);
                         System.out.println("저장완료");
+                        protocol = new Protocol(Protocol.PT_DAILY_NUTR_RESULT);
+                        os.write(protocol.getPacket());
                         break;
                     case Protocol.PT_RES_CHART_DATE:
                         System.out.println("클라이언트가 통계 표시 날짜를 보냈습니다");
+                        id = protocol.getId();
                         String[] date = protocol.getDate().split(",");
                         int[] startDate = new int[]{Integer.parseInt(date[0]), Integer.parseInt(date[1]), Integer.parseInt(date[2])};
                         int[] endDate = new int[]{Integer.parseInt(date[3]), Integer.parseInt(date[4]), Integer.parseInt(date[5])};
                         ndm = new NtrDataManager();
-                        ArrayList<DailyNutrient> dnList = ndm.readData(startDate, endDate);
+                        ArrayList<DailyNutrient> dnList = ndm.readData(startDate, endDate, id);
                         ObjectOutputStream oos = new ObjectOutputStream(os);
                         oos.writeObject(dnList);
                         System.out.println("서버가 영양소 정보를 보냈습니다");
                         oos.flush();
+                        is.read();
+                        uim = new UserInfoManager();
+                        UserDTO userDTO = uim.select(id);
+                        LimitNutrient limitNtr = ndm.getLimit(userDTO.getSex(), LocalDate.now().getYear() - userDTO.getYear());
+                        oos.writeObject(limitNtr);
+                        oos.flush();
+                        System.out.println("서버가 영양소 권장치를 보냈습니다");
                         break;
                     case Protocol.PT_RECOMMEND_FOOD:
                         System.out.println("클라이언트가 식품 추천을 요청했습니다");
+                        id = protocol.getId();
+                        int rcmNum = Integer.parseInt(protocol.getRcmNum());
+                        System.out.println(rcmNum);
                         Random ran = new Random();
-                        int num = ran.nextInt(90608);
 
                         ndm = new NtrDataManager();
-                        String food_cd = ndm.getFoodCD(num);
-                        FoodNutrient foodNtrInfo = GetOpenData.recommend(food_cd);
+                        uim = new UserInfoManager();
+                        userDTO = uim.select(id);
+                        limitNtr = ndm.getLimit(userDTO.getSex(), LocalDate.now().getYear() - userDTO.getYear());
+                        int[] nowDate = new int[]{LocalDate.now().getYear(), LocalDate.now().getMonthValue(), LocalDate.now().getDayOfMonth()};
+                        dnList = ndm.readData(nowDate, nowDate, id);
+                        ArrayList<FoodNutrient> foodNtrInfoList = new ArrayList<>();
+                        for (int j = 0; j < rcmNum; j++) {
+                            int num = ran.nextInt(90608);
+                            String food_cd = ndm.getFoodCD(num);
+                            FoodNutrient fn = GetOpenData.recommend(food_cd, dnList, limitNtr);
+                            if (fn == null) {
+                                rcmNum++;
+                            } else {
+                                foodNtrInfoList.add(fn);
+                            }
+                        }
                         oos = new ObjectOutputStream(os);
-                        oos.writeObject(foodNtrInfo);
+                        oos.writeObject(foodNtrInfoList);
                         System.out.println("서버가 식품 정보를 보냈습니다");
                         oos.flush();
+                        break;
+                    case Protocol.PT_REQ_FOOD_CD:
+                        System.out.println("클라이언트가 식품코드를 요청했습니다");
+                        String food_name = protocol.getFoodName();
+                        ndm = new NtrDataManager();
+                        String food_cd = ndm.getFoodCD(food_name);
+                        protocol = new Protocol(Protocol.PT_FOOD_CD_RESULT);
+                        protocol.setFoodCd(food_cd);
+                        os.write(protocol.getPacket());
+                        System.out.println(protocol.getFoodCd());
+                        System.out.println("서버가 식품코드를 보냈습니다.");
                         break;
                 }//end switch
                 if (program_stop) break;
