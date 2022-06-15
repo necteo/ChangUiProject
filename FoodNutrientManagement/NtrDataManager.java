@@ -50,10 +50,10 @@ public class NtrDataManager {       // DB 일일_영양소 테이블의 입출�
         LocalDateTime date = LocalDate.parse(dn.getDate(), formatter).atStartOfDay();
         db.pst.setDate(1, java.sql.Date.valueOf(date.toLocalDate()));
         db.pst.setInt(2, dn.getTime());
-        db.pst.setDouble(3, dn.getCalories() * 3);
-        db.pst.setDouble(4, dn.getCarbohydrate() * 3);
-        db.pst.setDouble(5, dn.getProtein() * 3);
-        db.pst.setDouble(6, dn.getFat() * 3);
+        db.pst.setDouble(3, dn.getCalories() * 2);
+        db.pst.setDouble(4, dn.getCarbohydrate() * 2);
+        db.pst.setDouble(5, dn.getProtein() * 2);
+        db.pst.setDouble(6, dn.getFat() * 2);
         db.pst.setString(7, dn.getId());
         db.pst.executeUpdate();
         db.dbClose();

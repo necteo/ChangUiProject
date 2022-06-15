@@ -120,12 +120,10 @@ public class NtrChartView extends JFrame {  // 차트 출력 화면 클래스
         ValueMarker carbMarker = null;
         ValueMarker proMarker = null;
         if (chartMode == 0) {
-            range.setRange(0.0, 3000.0);
             calMarker = new ValueMarker(limitNtr.getCalorieLimit());
             carbMarker = new ValueMarker(limitNtr.getCarbLimit());
             proMarker = new ValueMarker(limitNtr.getProteinLimit());
         } else if (chartMode == 1) {
-            range.setRange(0.0, 1000.0);
             calMarker = new ValueMarker(limitNtr.getCalorieLimit() / 3);
             carbMarker = new ValueMarker(limitNtr.getCarbLimit() / 3);
             proMarker = new ValueMarker(limitNtr.getProteinLimit() / 3);

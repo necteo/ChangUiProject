@@ -48,9 +48,10 @@ public class Protocol implements Serializable {
                 case PT_RES_LOGIN -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_LOGIN_PASSWORD];
                 case PT_UNDEFINED -> packet = new byte[LEN_MAX];
                 case PT_LOGIN_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_RESULT];
-                case PT_RES_SIGN_UP, PT_CHART_DATA_RESULT, PT_RES_DAILY_NUTR, PT_EXIT ->
+                case PT_RES_SIGN_UP, PT_CHART_DATA_RESULT, PT_EXIT ->
                         packet = new byte[LEN_PROTOCOL_TYPE];
                 case PT_SIGN_UP_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_SIGN_UP_RESULT];
+                case PT_RES_DAILY_NUTR -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID];
                 case PT_DAILY_NUTR_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_DAILY_NUTR_RESULT];
                 case PT_RECOMMEND_FOOD -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_RECOMMEND_NUM];
                 case PT_RES_CHART_DATE -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_CHART_DATE];

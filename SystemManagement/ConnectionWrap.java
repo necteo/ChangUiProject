@@ -114,8 +114,12 @@ public class ConnectionWrap implements Runnable {
                         try {
                             ndm.insertData(dn);
                             System.out.println("저장완료");
-                            if (dn.getCalories() > limitNtr.getCalorieLimit() || dn.getCarbohydrate() > limitNtr.getCarbLimit()
-                                    || dn.getProtein() > limitNtr.getProteinLimit()) {
+                            int[] date = new int[]{LocalDate.now().getYear(),
+                                    LocalDate.now().getMonthValue(),
+                                    LocalDate.now().getDayOfMonth()};
+                            ArrayList<DailyNutrient> dnList = ndm.readData(date, date, id);
+                            if (dnList.get(0).getCalories() > limitNtr.getCalorieLimit() || dnList.get(0).getCarbohydrate() > limitNtr.getCarbLimit()
+                                    || dnList.get(0).getProtein() > limitNtr.getProteinLimit()) {
                                 protocol.setDailyNutrResult("2");
                             } else {
                                 protocol.setDailyNutrResult("0");

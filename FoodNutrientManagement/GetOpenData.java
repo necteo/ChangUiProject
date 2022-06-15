@@ -128,28 +128,23 @@ public class GetOpenData {
         double calorieLimit = limitNtr.getCalorieLimit();
         double carbLimit = limitNtr.getCarbLimit();
         double proteinLimit = limitNtr.getProteinLimit();
-        double sumCalories = fn.getCalories() * 3;
-        double sumCarb = fn.getCarbohydrate() * 3;
-        double sumProtein = fn.getProtein() * 3;
+        double sumCalories = fn.getCalories() * 2;
+        double sumCarb = fn.getCarbohydrate() * 2;
+        double sumProtein = fn.getProtein() * 2;
         for (DailyNutrient dn : dnList) {
             sumCalories += dn.getCalories();
             sumCarb += dn.getCarbohydrate();
             sumProtein += dn.getProtein();
         }
-        if (fn.getCalories() * 3 >= calorieLimit * 0.1 && fn.getCarbohydrate() * 3 >= carbLimit * 0.2 &&
-                fn.getProtein() * 3 >= proteinLimit * 0.1) {
+        if (fn.getCalories() * 2 >= calorieLimit * 0.2 && fn.getCarbohydrate() * 2 >= carbLimit * 0.2) {
             System.out.println("0.2 over");
             if (sumCalories <= calorieLimit * 2 / 3 ||
-                    sumCalories <= calorieLimit * 0.97 && sumCalories <= calorieLimit * 1.03) {
+                    sumCalories <= calorieLimit * 0.97 && sumCalories <= calorieLimit) {
                 System.out.println("calorie");
                 if (sumCarb <= carbLimit * 2 / 3 ||
-                        sumCarb >= carbLimit * 0.97 && sumCarb <= carbLimit * 1.03) {
+                        sumCarb >= carbLimit * 0.97 && sumCarb <= carbLimit) {
                     System.out.println("carbohydrate");
-                    if (sumProtein <= proteinLimit * 2 / 3 ||
-                            sumProtein >= proteinLimit * 0.9 && sumProtein <= proteinLimit * 1.03){
-                        System.out.println("protein");
-                        return false;
-                    }
+                    return false;
                 }
             }
         }

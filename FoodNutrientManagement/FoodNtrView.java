@@ -142,6 +142,7 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                             FoodNutrient foodNtrInfo = GetOpenData.getDataByCode(food_cd);  // 입력된 식품명으로 공공데이터 가져옴
 
                             client.protocol = new Protocol(Protocol.PT_RES_DAILY_NUTR);
+                            client.protocol.setId(id);
                             System.out.println("영양소 정보 전송");
                             client.os.write(client.protocol.getPacket());
 
@@ -162,10 +163,12 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                             client.is.read(client.buf);
                             int packetType = client.buf[0];
                             client.protocol.setPacket(packetType, client.buf);
-                            if (packetType == Protocol.PT_DAILY_NUTR_RESULT)
+                            if (client.protocol.getDailyNutrResult().equals("0"))
                                 JOptionPane.showMessageDialog(null, "영양소 정보 저장 완료");
-                            else
+                            else if (client.protocol.getDailyNutrResult().equals("1"))
                                 JOptionPane.showMessageDialog(null, "저장 실패");
+                            else
+                                JOptionPane.showMessageDialog(null, "일일 권장 영양소를 초과");
                         } catch (IOException | ParseException ex) {
                             throw new RuntimeException(ex);
                         } catch (NullPointerException ex) {
@@ -212,6 +215,7 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                                 FoodNutrient foodNtrInfo = GetOpenData.getDataByCode(food_cd);  // 입력된 식품명으로 공공데이터 가져옴
 
                                 client.protocol = new Protocol(Protocol.PT_RES_DAILY_NUTR);
+                                client.protocol.setId(id);
                                 System.out.println("영양소 정보 전송");
                                 client.os.write(client.protocol.getPacket());
 
@@ -395,7 +399,7 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
         panel.add(lblTo);
 
         SpinnerDateModel _year = new SpinnerDateModel(lastYear, firstYear, lastYear, Calendar.YEAR);
-        SpinnerNumberModel _month = new SpinnerNumberModel(1, 1, 12, 1);
+        SpinnerNumberModel _month = new SpinnerNumberModel(7, 1, 12, 1);
         SpinnerNumberModel _day = new SpinnerNumberModel(1, 1, 31, 1);
 
         JSpinner spnEndYear = new JSpinner(_year);
