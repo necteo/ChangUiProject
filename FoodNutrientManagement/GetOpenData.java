@@ -34,7 +34,7 @@ public class GetOpenData {
         conn.setRequestProperty("Content-type", "application/json");
         System.out.println("Response Msg: " + conn.getResponseMessage() + "Response code: " + conn.getResponseCode());
 
-        return fatchData(conn);
+        return fetchData(conn);
     }
 
     public static FoodNutrient getDataByCode(String food_cd) throws IOException, ParseException {
@@ -47,7 +47,7 @@ public class GetOpenData {
         conn.setRequestProperty("Content-type", "application/json");
         System.out.println("Response Msg: " + conn.getResponseMessage() + "Response code: " + conn.getResponseCode());
 
-        return fatchData(conn).get(0);
+        return fetchData(conn).get(0);
     }
 
     public static FoodNutrient recommend(String food_cd, ArrayList<DailyNutrient> dnList, LimitNutrient limitNtr)
@@ -59,7 +59,7 @@ public class GetOpenData {
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-type", "application/json");
 
-        FoodNutrient fn = fatchData(conn).get(0);
+        FoodNutrient fn = fetchData(conn).get(0);
 
         if (chkLimit(fn, dnList, limitNtr)) {
             return null;
@@ -68,7 +68,7 @@ public class GetOpenData {
         }
     }
 
-    private static ArrayList<FoodNutrient> fatchData(HttpURLConnection conn) throws IOException, ParseException {
+    private static ArrayList<FoodNutrient> fetchData(HttpURLConnection conn) throws IOException, ParseException {
         BufferedReader rd;
         if (conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
             rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -125,24 +125,31 @@ public class GetOpenData {
     }
 
     private static boolean chkLimit(FoodNutrient fn, ArrayList<DailyNutrient> dnList, LimitNutrient limitNtr) {
-        double sumCalories = fn.getCalories();
-        double sumCarb = fn.getCarbohydrate();
-        double sumProtein = fn.getProtein();
+        double calorieLimit = limitNtr.getCalorieLimit();
+        double carbLimit = limitNtr.getCarbLimit();
+        double proteinLimit = limitNtr.getProteinLimit();
+        double sumCalories = fn.getCalories() * 3;
+        double sumCarb = fn.getCarbohydrate() * 3;
+        double sumProtein = fn.getProtein() * 3;
         for (DailyNutrient dn : dnList) {
             sumCalories += dn.getCalories();
             sumCarb += dn.getCarbohydrate();
             sumProtein += dn.getProtein();
         }
-        if (sumCalories <= limitNtr.getCalorieLimit() * 2 / 3 || limitNtr.getCalorieLimit() * 0.97 <= sumCalories &&
-                sumCalories <= limitNtr.getCalorieLimit()) {
-            System.out.println("calorie");
-            if (sumCarb <= limitNtr.getCarbLimit() * 2 / 3 || limitNtr.getCarbLimit() * 0.97 <= sumCarb &&
-                    sumCarb <= limitNtr.getCarbLimit()) {
-                System.out.println("carbohydrate");
-                if (sumProtein <= limitNtr.getProteinLimit() * 2 / 3 || limitNtr.getProteinLimit() * 0.97 <= sumProtein &&
-                        sumProtein <= limitNtr.getProteinLimit()) {
-                    System.out.println("protein");
-                    return false;
+        if (fn.getCalories() * 3 >= calorieLimit * 0.1 && fn.getCarbohydrate() * 3 >= carbLimit * 0.2 &&
+                fn.getProtein() * 3 >= proteinLimit * 0.1) {
+            System.out.println("0.2 over");
+            if (sumCalories <= calorieLimit * 2 / 3 ||
+                    sumCalories <= calorieLimit * 0.97 && sumCalories <= calorieLimit * 1.03) {
+                System.out.println("calorie");
+                if (sumCarb <= carbLimit * 2 / 3 ||
+                        sumCarb >= carbLimit * 0.97 && sumCarb <= carbLimit * 1.03) {
+                    System.out.println("carbohydrate");
+                    if (sumProtein <= proteinLimit * 2 / 3 ||
+                            sumProtein >= proteinLimit * 0.9 && sumProtein <= proteinLimit * 1.03){
+                        System.out.println("protein");
+                        return false;
+                    }
                 }
             }
         }

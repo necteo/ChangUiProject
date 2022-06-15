@@ -22,6 +22,7 @@ public class Protocol implements Serializable {
     public static final int LEN_LOGIN_PASSWORD = 20;	// PWD 길이
     public static final int LEN_LOGIN_RESULT = 2;	// 로그인 인증 값 길이
     public static final int LEN_SIGN_UP_RESULT = 2; // 회원가입 결과 값 길이
+    public static final int LEN_DAILY_NUTR_RESULT = 2;  // 영양소 정보 저장 결과
     public static final int LEN_RECOMMEND_NUM = 2;    // 추천 식품 개수 길이
     public static final int LEN_CHART_DATE = 20;    // 통계 차트 표시 날짜 길이
     public static final int LEN_FOOD_NAME = 100;    // 식품 이름 길이
@@ -47,9 +48,10 @@ public class Protocol implements Serializable {
                 case PT_RES_LOGIN -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_LOGIN_PASSWORD];
                 case PT_UNDEFINED -> packet = new byte[LEN_MAX];
                 case PT_LOGIN_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_RESULT];
-                case PT_RES_SIGN_UP, PT_CHART_DATA_RESULT, PT_RES_DAILY_NUTR, PT_DAILY_NUTR_RESULT, PT_EXIT ->
+                case PT_RES_SIGN_UP, PT_CHART_DATA_RESULT, PT_RES_DAILY_NUTR, PT_EXIT ->
                         packet = new byte[LEN_PROTOCOL_TYPE];
                 case PT_SIGN_UP_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_SIGN_UP_RESULT];
+                case PT_DAILY_NUTR_RESULT -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_DAILY_NUTR_RESULT];
                 case PT_RECOMMEND_FOOD -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_RECOMMEND_NUM];
                 case PT_RES_CHART_DATE -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + LEN_CHART_DATE];
                 case PT_REQ_FOOD_CD -> packet = new byte[LEN_PROTOCOL_TYPE + LEN_FOOD_NAME];
@@ -121,6 +123,18 @@ public class Protocol implements Serializable {
     public void setPassword(String password) {
         System.arraycopy(password.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE + LEN_LOGIN_ID, password.trim().getBytes().length);
         packet[LEN_PROTOCOL_TYPE + LEN_LOGIN_ID + password.trim().getBytes().length] = '\0';
+    }
+
+    public String getDailyNutrResult() {
+        // String 의 다음 생성자를 사용 : String(byte[] bytes, int offset, int length)
+        return new String(packet, LEN_PROTOCOL_TYPE, LEN_DAILY_NUTR_RESULT).trim();
+    }
+
+    // String ok를 byte[]로 만들어서 packet 의 프로토콜 타입 바로 뒤에 추가
+    public void setDailyNutrResult(String ok) {
+        // arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
+        System.arraycopy(ok.trim().getBytes(), 0, packet, LEN_PROTOCOL_TYPE, ok.trim().getBytes().length);
+        packet[LEN_PROTOCOL_TYPE + ok.trim().getBytes().length] = '\0';
     }
 
     public String getRcmNum() {

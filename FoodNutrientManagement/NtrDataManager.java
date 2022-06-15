@@ -41,26 +41,22 @@ public class NtrDataManager {       // DB 일일_영양소 테이블의 입출�
         return dnList;
     }
 
-    public void insertData(DailyNutrient dn) {  // DB 에 데이터 저장하는 메소드
+    public void insertData(DailyNutrient dn) throws SQLException {  // DB 에 데이터 저장하는 메소드
         if (dn == null) return;
-        try {
-            db.dbConn();
-            String sql = "insert into 일일_영양소 values (?, ?, ?, ?, ? ,?, ?)";
-            db.pst = db.conn.prepareStatement(sql);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            LocalDateTime date = LocalDate.parse(dn.getDate(), formatter).atStartOfDay();
-            db.pst.setDate(1, java.sql.Date.valueOf(date.toLocalDate()));
-            db.pst.setInt(2, dn.getTime());
-            db.pst.setDouble(3, dn.getCalories());
-            db.pst.setDouble(4, dn.getCarbohydrate());
-            db.pst.setDouble(5, dn.getProtein());
-            db.pst.setDouble(6, dn.getFat());
-            db.pst.setString(7, dn.getId());
-            db.pst.executeUpdate();
-            db.dbClose();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        db.dbConn();
+        String sql = "insert into 일일_영양소 values (?, ?, ?, ?, ? ,?, ?)";
+        db.pst = db.conn.prepareStatement(sql);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime date = LocalDate.parse(dn.getDate(), formatter).atStartOfDay();
+        db.pst.setDate(1, java.sql.Date.valueOf(date.toLocalDate()));
+        db.pst.setInt(2, dn.getTime());
+        db.pst.setDouble(3, dn.getCalories() * 3);
+        db.pst.setDouble(4, dn.getCarbohydrate() * 3);
+        db.pst.setDouble(5, dn.getProtein() * 3);
+        db.pst.setDouble(6, dn.getFat() * 3);
+        db.pst.setString(7, dn.getId());
+        db.pst.executeUpdate();
+        db.dbClose();
     }
 
     public String getFoodCD(int n) {

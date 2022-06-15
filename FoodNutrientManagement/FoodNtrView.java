@@ -232,10 +232,12 @@ public class FoodNtrView extends JFrame implements ActionListener {     // 식�
                                 client.is.read(client.buf);
                                 int packetType = client.buf[0];
                                 client.protocol.setPacket(packetType, client.buf);
-                                if (packetType == Protocol.PT_DAILY_NUTR_RESULT)
+                                if (client.protocol.getDailyNutrResult().equals("0"))
                                     JOptionPane.showMessageDialog(null, "영양소 정보 저장 완료");
-                                else
+                                else if (client.protocol.getDailyNutrResult().equals("1"))
                                     JOptionPane.showMessageDialog(null, "저장 실패");
+                                else
+                                    JOptionPane.showMessageDialog(null, "일일 권장 영양소를 초과");
                             } catch (IOException | ParseException ex) {
                                 throw new RuntimeException(ex);
                             } catch (NullPointerException ex) {

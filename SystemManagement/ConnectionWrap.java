@@ -11,6 +11,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Random;
@@ -100,14 +101,28 @@ public class ConnectionWrap implements Runnable {
                         os.write(protocol.getPacket());
                         break;
                     case Protocol.PT_RES_DAILY_NUTR:
+                        id = protocol.getId();
                         os.write('o');
                         ois = new ObjectInputStream(is);
                         DailyNutrient dn = (DailyNutrient) ois.readObject();
                         System.out.println("클라이언트가 영양소 정보를 보냈습니다");
                         ndm = new NtrDataManager();
-                        ndm.insertData(dn);
-                        System.out.println("저장완료");
+                        uim = new UserInfoManager();
+                        UserDTO userDTO = uim.select(id);
+                        LimitNutrient limitNtr = ndm.getLimit(userDTO.getSex(), LocalDate.now().getYear() - userDTO.getYear());
                         protocol = new Protocol(Protocol.PT_DAILY_NUTR_RESULT);
+                        try {
+                            ndm.insertData(dn);
+                            System.out.println("저장완료");
+                            if (dn.getCalories() > limitNtr.getCalorieLimit() || dn.getCarbohydrate() > limitNtr.getCarbLimit()
+                                    || dn.getProtein() > limitNtr.getProteinLimit()) {
+                                protocol.setDailyNutrResult("2");
+                            } else {
+                                protocol.setDailyNutrResult("0");
+                            }
+                        } catch (SQLException e) {
+                            protocol.setDailyNutrResult("1");
+                        }
                         os.write(protocol.getPacket());
                         break;
                     case Protocol.PT_RES_CHART_DATE:
@@ -124,8 +139,8 @@ public class ConnectionWrap implements Runnable {
                         oos.flush();
                         is.read();
                         uim = new UserInfoManager();
-                        UserDTO userDTO = uim.select(id);
-                        LimitNutrient limitNtr = ndm.getLimit(userDTO.getSex(), LocalDate.now().getYear() - userDTO.getYear());
+                        userDTO = uim.select(id);
+                        limitNtr = ndm.getLimit(userDTO.getSex(), LocalDate.now().getYear() - userDTO.getYear());
                         oos.writeObject(limitNtr);
                         oos.flush();
                         System.out.println("서버가 영양소 권장치를 보냈습니다");
