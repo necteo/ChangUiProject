@@ -139,10 +139,10 @@ public class GetOpenData {
         if (fn.getCalories() * 2 >= calorieLimit * 0.2 && fn.getCarbohydrate() * 2 >= carbLimit * 0.2) {
             System.out.println("0.2 over");
             if (sumCalories <= calorieLimit * 2 / 3 ||
-                    sumCalories <= calorieLimit * 0.97 && sumCalories <= calorieLimit) {
+                    sumCalories <= calorieLimit * 0.95 && sumCalories <= calorieLimit) {
                 System.out.println("calorie");
                 if (sumCarb <= carbLimit * 2 / 3 ||
-                        sumCarb >= carbLimit * 0.97 && sumCarb <= carbLimit) {
+                        sumCarb >= carbLimit * 0.95 && sumCarb <= carbLimit) {
                     System.out.println("carbohydrate");
                     return false;
                 }
